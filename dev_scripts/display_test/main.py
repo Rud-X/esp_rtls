@@ -1,10 +1,7 @@
-# main.py -- put your code here!
-from machine import Pin, I2C, SoftI2C
-#from sh1106 import *
+from machine import Pin, SoftI2C
 import sh1106
 import time
 
-#i2c = I2C(scl=Pin(22), sda=Pin(21), freq=400000)
 i2c = SoftI2C(scl=Pin(22), sda=Pin(21), freq=100000)
 display = sh1106.SH1106_I2C(128, 64, i2c, None, 0x3c)
 display.sleep(False)
