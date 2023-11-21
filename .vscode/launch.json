@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/chrru/Dokumenter/BHT_Local/AdvPyt/esp_rtls/display_driver",
-      "program": "c:/Users/chrru/Dokumenter/BHT_Local/AdvPyt/esp_rtls/display_driver/build/Debug/outDebug",
+      "cwd": "c:/Users/chrru/Downloads",
+      "program": "c:/Users/chrru/Downloads/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
