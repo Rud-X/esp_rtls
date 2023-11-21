@@ -18,7 +18,7 @@ display.sleep(False)
 display.fill(0)
 
 # Get the MAC address
-mac = ubinascii.hexlify(network.WLAN().config('mac'),':').decode()
+mac = ubinascii.hexlify(network.WLAN(network.STA_IF).config('mac'),':').decode() 
 print('MAC address: %s' % mac)
 
 # Display the MAC address on the OLED display
