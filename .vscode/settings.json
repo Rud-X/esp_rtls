@@ -64,8 +64,6 @@
   "python.analysis.typeshedPaths": [
     ".venv/Lib/site-packages"
   ],
-  "python.linting.enabled": true,
-  "python.linting.pylintEnabled": true,
   "python.analysis.extraPaths": [
     "c:\\Users\\chrru\\.vscode\\extensions\\joedevivo.vscode-circuitpython-0.1.20-win32-x64\\boards\\0x239A\\0x80EC",
     "c:\\Users\\chrru\\.vscode\\extensions\\joedevivo.vscode-circuitpython-0.1.20-win32-x64\\stubs",
@@ -73,5 +71,8 @@
   ],
   "circuitpython.board.version": null,
   "circuitpython.board.vid": "0x239A",
-  "circuitpython.board.pid": "0x80EC"
+  "circuitpython.board.pid": "0x80EC",
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  }
 }
