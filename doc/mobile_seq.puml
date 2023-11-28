@@ -1,0 +1,27 @@
+@startuml
+
+participant "User" as U
+participant "Mobile Device" as M
+participant "Station 1" as S1
+participant "Station 2" as S2
+participant "Station 3" as S3
+
+U -> M: Turn on
+
+M -> M: Scan for stations
+
+' Loop through stations and try send request to all of them
+loop until answer
+    M -> S1 !! : Request
+    M -> S2 !! : Request
+    M -> S3 !! : Request
+end
+
+== Mobile in range ==
+
+M -> S1: Request
+S1 --> M: Responses
+
+
+
+@enduml
