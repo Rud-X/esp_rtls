@@ -28,7 +28,11 @@ _TRANSITION_parseToken_noToken = const(6)
 # bitnr:    | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |  8-15 | 16-23 |
 #           | msgType   | TokenID           | RSSI1 | RSSI2 |
 
-
+# Message-Type-ID (MTID): byte-strings
+_MTID_parseToken = const(0b001)
+_MTID_ackToken = const(0b010)
+_MTID_pingMobile = const(0b011)
+_MTID_pongMobile = const(0b100)
 
 
 class esp_rtls_station_mobile_info:
@@ -63,17 +67,10 @@ class esp_rtls_station_mobile_info:
 
 
 class esp_rtls_station:
-    # Constants:
-        # Message-Type-ID (MTID): byte-strings
-    _MTID_parseToken = 0b001
-    _MTID_ackToken   = 0b010
-    _MTID_pingMobile = 0b011
-    _MTID_pongMobile = 0b100
-    
     # Attributes:
     sta = None
-    scl_pin = const(22)
-    sda_pin = const(21)
+    #scl_pin = const(22)
+    #sda_pin = const(21)
     i2c = None
     line_height = const(10)
     mobile_list = {}
@@ -83,30 +80,15 @@ class esp_rtls_station:
         self.__display_setup()
         self.__esp_now_setup()
 
-        # Add the station to the station list
-        self.station_list = {
-            stationID: ubinascii.unhexlify(stationMAC)
-            for stationID, stationMAC in station_list.items()
-        }
-        self.mac = network.WLAN(network.STA_IF).config("mac")
-        self.stationID = self.__stationidFromMac(self.mac)
-        self.__checkIfStationInList(self.mac)
-        self.__esp_now_add_other_stations()
-        
-        print("Check if station 1 is me")
-        # If this is station 1, send parseToken to station 2
-        if self.stationID == 1:
-            print("Send parseToken to station 2")
-            # Send message to station 2
-            msgType     = self._MTID_parseToken
-            msgTokenID  = 0b00001
-            mac         = self.station_list[2]
-            
-            msgData = uctypes.UINT8 | (msgType << 5 | msgTokenID)
-            print("station_list[2]: " + str(self.station_list[2]))
-            print("msgData: " + str(msgData))
-            self.esp_now.send(mac, str(msgData), False)
-            print("Message send")
+        # # Add the station to the station list
+        # self.station_list = {
+        #     stationID: ubinascii.unhexlify(stationMAC)
+        #     for stationID, stationMAC in station_list.items()
+        # }
+        # self.mac = network.WLAN(network.STA_IF).config("mac")
+        # self.stationID = self.__stationidFromMac(self.mac)
+        # self.__checkIfStationInList(self.mac)
+        # self.__esp_now_add_other_stations()
 
         # # Add the mobiles to the mobile list
         # for MobileTokenID, MobileMAC in mobile_list.items():
@@ -122,55 +104,34 @@ class esp_rtls_station:
         #         self.station_list,
         #     )
         
-        
         # # Activate token 1 if this is station 1
         # if mobile_token == '0001' and self.stationID == 1:
         #     self.__do_STATE_1_pingMobile('0001')
         #     self.__printFunctionNameSecondLastLine("Select token 1")
         
-        self.__printStateLastLine("init DONE")
+        # self.__printStateLastLine("init DONE")
     
     def loop(self):
         """Description: Loop of the station"""
         
-        # Print debug loop counter (count up every time called) on the display
-        # If my mac address is the first in the station list, print "I am station 1" on the display on the second line
-        self.display.fill(0)
-        if self.stationID == 1:
-            self.display.text("I am station 1", 0, self.line_height*2, 1)
-            
-            
-        self.display.text("Loop", 0, 0, 1)
-        self.display.text(str(random.randint(0, 100)), 0, self.line_height, 1)
-        self.display.show()
-        
-        # Check if there is a message => no timeout
-        mac, data = self.esp_now.recv(0)
+        # Check if there is a message
+        mac, data = self.esp_now.recv()
         if mac != None:
-            print("Message recieved")
             self.handleRecievedData(mac, data)
 
     def handleRecievedData(self, mac, data):
         self.__printFunctionNameSecondLastLine("handleRecievedData")
         
-        # Convert data (string) to byte array
-        data = bytearray(data)
-        print("data: " + str(data))
-        
-        # Match first 3 bit of data with the message type
-        print("data: " + str(data))
-        msgType = (data[0] & 0b11100000) >> 5
-        
-        if msgType == self._MTID_parseToken:
-            self.__handleRecievedParseToken(mac, data)
+        # # Match first 3 bit of data with the message type
+        # msgType = (data[0] & 0b11100000) >> 5
 
-        # match (msgType& 0b11100000):
-        #     case (0b001): # parseToken
-        #         return self.__handleRecievedParseToken(mac, data)
-        #     case (0b010): # ackToken
-        #         return self.__handleRecievedAckToken(mac, data)
-        #     case (0b100): # pongMobile
-        #         return self.__handleRecievedPongMobile(mac, data)
+        # match msgType:
+        #     case _MTID_parseToken:
+        #         self.__handleRecievedParseToken(mac, data)
+        #     case _MTID_ackToken:
+        #         self.__handleRecievedAckToken(mac, data)
+        #     case _MTID_pongMobile:
+        #         self.__handleRecievedPongMobile(mac, data)
         #     case _:
         #         # Print "Error: Unknown message type" on the display
         #         self.display.fill(0)
@@ -193,52 +154,32 @@ class esp_rtls_station:
 
         # Get stationID from mac
         stationID = self.__stationidFromMac(mac)
-        
-        # Print to last line which token is recieved
-        self.display.fill(0)
-        self.display.text("Token: " + str(tokenID), 0, 5 * self.line_height, 1)
-        self.display.show()
-        
-        # wait for 1 second
-        time.sleep(1)
-        
-        # Send Parse Token back to the station  (for testing)
-        msgType = self._MTID_parseToken
+
+        # send ackToken to the station
+        msgType = _MTID_ackToken
         msgTokenID = tokenID
         msgData = uctypes.UINT8 | (msgType << 5 | msgTokenID)
-        
-        self.esp_now.send(mac, str(msgData), 1)
-        
-        self.display.fill(0)
-        self.display.text("Token send: " + str(tokenID), 0, 5 * self.line_height, 1)
-        self.display.show()
-        
 
-        # # send ackToken to the station
-        # msgType = self._MTID_ackToken
-        # msgTokenID = tokenID
-        # msgData = uctypes.UINT8 | (msgType << 5 | msgTokenID)
+        self.esp_now.send(mac, msgData, 1)
 
-        # self.esp_now.send(mac, msgData, 1)
+        # Update the RSSI of the mobile to the station
+        self.mobile_list[tokenID].updateRSSI(stationID, data[1])
 
-        # # Update the RSSI of the mobile to the station
-        # self.mobile_list[tokenID].updateRSSI(stationID, data[1])
+        # If the mobile is in noToken change to pingMobile
+        if self.mobile_list[tokenID].state == _STATE_0_noToken:
+            self.mobile_list[tokenID].state = _STATE_1_pingMobile
+        else:
+            # Print "Error: Mobile not in noToken state" on the display
+            self.display.fill(0)
+            self.display.text("Error:", 0, 0, 1)
+            self.display.text("Mobile not in noToken state", 0, self.line_height, 1)
+            self.display.text(self.__mac_to_string(mac), 0, self.line_height * 2, 1)
+            self.display.text("tokenID: " + str(tokenID), 0, self.line_height * 3, 1)
+            self.display.show()
+            while True:
+                pass
 
-        # # If the mobile is in noToken change to pingMobile
-        # if self.mobile_list[tokenID].state == _STATE_0_noToken:
-        #     self.mobile_list[tokenID].state = _STATE_1_pingMobile
-        # else:
-        #     # Print "Error: Mobile not in noToken state" on the display
-        #     self.display.fill(0)
-        #     self.display.text("Error:", 0, 0, 1)
-        #     self.display.text("Mobile not in noToken state", 0, self.line_height, 1)
-        #     self.display.text(self.__mac_to_string(mac), 0, self.line_height * 2, 1)
-        #     self.display.text("tokenID: " + str(tokenID), 0, self.line_height * 3, 1)
-        #     self.display.show()
-        #     while True:
-        #         pass
-
-        # self.__do_STATE_1_pingMobile(tokenID)
+        self.__do_STATE_1_pingMobile(tokenID)
 
     def __handleRecievedAckToken(self, mac, data):
         self.__printFunctionNameSecondLastLine("handleRecievedAckToken")
@@ -401,7 +342,7 @@ class esp_rtls_station:
 
     def __display_setup(self):
         """Setup sh1106 display"""
-        self.i2c = SoftI2C(scl=Pin(self.scl_pin), sda=Pin(self.sda_pin), freq=100000)
+        self.i2c = SoftI2C(scl=Pin(22), sda=Pin(21), freq=100000)
         self.display = sh1106.SH1106_I2C(128, 64, self.i2c, None, 0x3C)
         self.display.sleep(False)
         self.display.fill(0)
@@ -429,7 +370,6 @@ class esp_rtls_station:
         for stationID, stationMAC in self.station_list.items():
             if stationMAC != self.mac:
                 self.esp_now.add_peer(stationMAC)
-                print("Added station " + str(stationID) + " to ESP-Now - MAC: " + str(stationMAC))
 
     def __mac_to_string(self, mac):
         """Convert MAC address to string"""

@@ -1,0 +1,6 @@
+@echo off
+echo Running ampy put command...
+ampy -p COM3 -d 2 put esp_rtls_station.py
+
+echo ampy put command succeeded. Now running ampy run command...
+ampy -p COM3 -d 2 run main.py

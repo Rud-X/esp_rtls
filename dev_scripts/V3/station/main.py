@@ -13,10 +13,10 @@ list_of_stations = {1:'08b61f8885dc', 2:'d4d4da59edac'}
 # List of mobiles
     # 1 => 0b0001 ; 01:23:45:67:89:ab
     # 2 => 0b0010 ; 12:34:56:78:9a:bc
-list_of_mobiles = {'0001': '0123456789ab', '0010': '123456789abc'}
+list_of_mobiles = {1: '0123456789ab', 2: '123456789abc'}
 
 # Create the station
-station = esp_rtls_station(list_of_stations, list_of_mobiles, '0001')
+station = esp_rtls_station(list_of_stations, list_of_mobiles, 1)
 
 # Loop
 while True:

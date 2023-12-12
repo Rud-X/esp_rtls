@@ -31,6 +31,7 @@ display.show()
 e = espnow.ESPNow()
 e.active(True)
 peer = ubinascii.unhexlify('d4d4da59edac')
+print(peer)
 e.add_peer(peer)
 
 display.text("ESPNow active", 0, 20, 1)
