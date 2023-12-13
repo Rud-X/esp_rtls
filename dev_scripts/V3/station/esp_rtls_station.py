@@ -74,8 +74,13 @@ class esp_rtls_station:
 
     # Task queue
     __taskQueue = []
+    
+    # debug time
+    __debug_time = 0
 
     def __init__(self, station_list, mobile_list, mobile_token):
+        print("BEGIN: init")
+        print("    debug_time: " + str(self.__debug_time))
         self.__display_setup()
         self.__esp_now_setup()
         self.station_list = {  # Add the station to the station list
@@ -102,7 +107,7 @@ class esp_rtls_station:
         # If this is station 1, send parseToken to station 2
         if self.stationID == 1:
             print("BEGIN: send parseToken to station 2")
-            time.sleep(2)
+            time.sleep(3)
 
             TokenID = 0b00001
             macNextStation = self.station_list[
@@ -213,7 +218,7 @@ class esp_rtls_station:
     # State methods:
     def __do_STATE_0_noToken(self, mac, data):
         print("\nFUNC: __do_STATE_0_noToken")
-        time.sleep(1)
+        time.sleep(self.__debug_time)
 
         # Isolate tokenID, msgType and rssi1 from the data
         tokenID = (data[0] & (0b00011111 << 0)) >> 0
@@ -260,7 +265,7 @@ class esp_rtls_station:
         print("\nFUNC: __do_STATE_1_sendAck")
 
         # Dummy state functionality
-        time.sleep(1)
+        time.sleep(self.__debug_time)
 
         # Send ackToken back to the station
         msgType = self._MTID_ackToken
@@ -273,7 +278,7 @@ class esp_rtls_station:
         print("\nFUNC: do_STATE_2_pingMobile")
 
         # Dummy state functionality
-        time.sleep(1)
+        time.sleep(self.__debug_time)
         
         # send ping to mobile
         msgType = self._MTID_pingMobile
@@ -286,7 +291,7 @@ class esp_rtls_station:
         print("\nFUNC: do_STATE_3_waitMobile")
 
         # Dummy state functionality
-        time.sleep(1)
+        time.sleep(self.__debug_time)
 
         #     # Save RSSI of the mobile to the my station
         # self.mobile_list[tokenID].updateRSSI(
@@ -328,7 +333,7 @@ class esp_rtls_station:
         print("        my_rssi: " + str(my_rssi))
 
         # Wait for 1 second
-        time.sleep(1)
+        time.sleep(self.__debug_time)
 
         # Send token
         self.esp_now.send(macNextStation, bytearray([msgData, my_rssi, past_rssi]), 1)

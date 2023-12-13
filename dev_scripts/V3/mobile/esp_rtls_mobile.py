@@ -27,6 +27,9 @@ class esp_rtls_mobile:
     i2c = None
     line_height = const(10)
     
+    # debug time
+    __debug_time = 0
+    
     
     
     # Task queue
@@ -51,9 +54,9 @@ class esp_rtls_mobile:
         
         self.state = _STATE_0_noRequest
         
-        self.p19 = Pin(19, Pin.OUT, value=1)
-        self.p18 = Pin(18, Pin.OUT, value=1)
-        self.p05 = Pin( 5, Pin.OUT, value=1)
+        self.LED_R = Pin(19, Pin.OUT, value=1)
+        self.LED_G = Pin(18, Pin.OUT, value=1)
+        self.LED_B = Pin( 5, Pin.OUT, value=1)
         
         self.display.fill(0)
         self.display.text("Mobile active", 0, 5 * self.line_height, 1)
@@ -79,8 +82,6 @@ class esp_rtls_mobile:
         # p05 => Station 3
         
         # Choose the station with the lowest RSSI and turn on the LED
-        # If two or more stations have the same RSSI, choose one of them randomly
-        # If no station has a RSSI, turn off all LEDs
         
         # Find the lowest RSSI
         lowestRSSI = None
@@ -92,20 +93,20 @@ class esp_rtls_mobile:
                     lowestRSSI = rssi
         
         # Turn off all LEDs
-        self.p19.value(1)
-        self.p18.value(1)
-        self.p05.value(1)
+        self.LED_R.value(1)
+        self.LED_G.value(1)
+        self.LED_B.value(1)
         
         # Turn on the LED for the station with the lowest RSSI
         if lowestRSSI != None:
             for stationID, rssi in self.station_rssi.items():
                 if rssi == lowestRSSI:
                     if stationID == 1:
-                        self.p19.value(0)
+                        self.LED_R.value(0)
                     elif stationID == 2:
-                        self.p18.value(0)
+                        self.LED_G.value(0)
                     elif stationID == 3:
-                        self.p05.value(0)
+                        self.LED_B.value(0)
                     else:
                         print("Error: Unknown stationID")
                         print("    stationID: " + str(stationID))
@@ -148,7 +149,7 @@ class esp_rtls_mobile:
         # self.display.text("from StID: " + str(stationID_recieved), 0, self.line_height * 2, 1)
         # self.display.show()
         
-        time.sleep(1)
+        time.sleep(self.__debug_time)
         
         # Save rssi in station_rssi
         self.station_rssi[stationID_recieved] = rssi
