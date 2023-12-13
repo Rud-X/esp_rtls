@@ -27,6 +27,8 @@ class esp_rtls_mobile:
     i2c = None
     line_height = const(10)
     
+    
+    
     # Task queue
     __taskQueue = []
     
@@ -42,7 +44,16 @@ class esp_rtls_mobile:
         self.mobile_ID = self.__mobileidFromMac(self.mac)
         self.__esp_now_add_stations()
         
+        self.station_rssi = {
+            stationID: None
+            for stationID in self.station_list.keys()
+        }
+        
         self.state = _STATE_0_noRequest
+        
+        self.p19 = Pin(19, Pin.OUT, value=1)
+        self.p18 = Pin(18, Pin.OUT, value=1)
+        self.p05 = Pin( 5, Pin.OUT, value=1)
         
         self.display.fill(0)
         self.display.text("Mobile active", 0, 5 * self.line_height, 1)
@@ -51,11 +62,58 @@ class esp_rtls_mobile:
         
     
     def loop(self):        
+        # Print info to display
+        self.__printInfoToDisplay()    
+        
+        self.changeLEDbyStationRSSI()
+    
+        
         # Check if there is a message in the buffer
         mac, data = self.esp_now.recv()
         if mac != None:
             self.handleRecievedData(mac, data)
     
+    def changeLEDbyStationRSSI(self):
+        # p19 => Station 1
+        # p18 => Station 2
+        # p05 => Station 3
+        
+        # Choose the station with the lowest RSSI and turn on the LED
+        # If two or more stations have the same RSSI, choose one of them randomly
+        # If no station has a RSSI, turn off all LEDs
+        
+        # Find the lowest RSSI
+        lowestRSSI = None
+        for stationID, rssi in self.station_rssi.items():
+            if rssi != None:
+                if lowestRSSI == None:
+                    lowestRSSI = rssi
+                elif rssi < lowestRSSI:
+                    lowestRSSI = rssi
+        
+        # Turn off all LEDs
+        self.p19.value(1)
+        self.p18.value(1)
+        self.p05.value(1)
+        
+        # Turn on the LED for the station with the lowest RSSI
+        if lowestRSSI != None:
+            for stationID, rssi in self.station_rssi.items():
+                if rssi == lowestRSSI:
+                    if stationID == 1:
+                        self.p19.value(0)
+                    elif stationID == 2:
+                        self.p18.value(0)
+                    elif stationID == 3:
+                        self.p05.value(0)
+                    else:
+                        print("Error: Unknown stationID")
+                        print("    stationID: " + str(stationID))
+                        print("    rssi: " + str(rssi))
+                        print("    lowestRSSI: " + str(lowestRSSI))
+                        while True:
+                            pass
+        
     def handleRecievedData(self, mac, data):
         # print data
         print("    data: " + str(data))
@@ -81,14 +139,19 @@ class esp_rtls_mobile:
         rssi = abs(self.esp_now.peers_table[mac][0])
         print("    rssi: " + str(rssi))
         
-        # Dummy functionality
-        self.display.fill(0)
-        self.display.text("Ping recieved", 0, 0, 1)
-        self.display.text("rssi: " + str(rssi), 0, self.line_height, 1)
-        self.display.text("from " + self.__mac_to_string(mac), 0, self.line_height * 2, 1)
-        self.display.show()
+        stationID_recieved = self.__stationidFromMac(mac)
+        
+        # # Dummy functionality
+        # self.display.fill(0)
+        # self.display.text("Ping recieved", 0, 0, 1)
+        # self.display.text("rssi: " + str(rssi), 0, self.line_height, 1)
+        # self.display.text("from StID: " + str(stationID_recieved), 0, self.line_height * 2, 1)
+        # self.display.show()
         
         time.sleep(1)
+        
+        # Save rssi in station_rssi
+        self.station_rssi[stationID_recieved] = rssi
         
         
         # Create pong message
@@ -104,12 +167,36 @@ class esp_rtls_mobile:
         """Print info to display"""
         self.display.fill(0)
         self.display.text("Mobile active", 0, 0, 1)
-        self.display.text("MobileID: " + str(self.mobile_ID), 0, self.line_height, 1)
-        self.display.text("MAC: " + self.__mac_to_string(self.mac), 0, self.line_height * 2, 1)
-        self.display.text("State: " + str(self.state), 0, self.line_height * 3, 1)
+        self.display.text("RSSI:  S1: " + str(self.station_rssi[1]), 0, self.line_height, 1)
+        self.display.text("       S2: " + str(self.station_rssi[2]), 0, self.line_height * 2, 1)
+        self.display.text("       S3: " + str(self.station_rssi[3]), 0, self.line_height * 3, 1)
         self.display.show()
         
-        
+    def __stationidFromMac(self, mac):
+        """Find the stationID from the station MAC address
+
+        Args:
+            mac (bytestring): mac address of the station
+
+        Returns:
+            bytestring: stationID
+        """
+
+        stationID = None
+        for stationID, stationMAC in self.station_list.items():
+            if stationMAC == mac:
+                break
+
+        if stationID == None:
+            # Print "Error: Station not in station list" on the display
+            self.display.fill(0)
+            self.display.text("Error:", 0, 0, 1)
+            self.display.text("Station not in list", 0, self.line_height, 1)
+            self.display.text(self.__mac_to_string(mac), 0, self.line_height * 2, 1)
+            while True:
+                pass
+
+        return stationID    
     def __mobileidFromMac(self, mac):
         """Find the mobileID from the mobile MAC address
 
