@@ -60,7 +60,7 @@ class esp_rtls_station:
     # Constants:
     # Message-Type-ID (MTID): byte-strings
     _MTID_parseToken = 0b001
-    _MTID_ackToken = 0b010
+    _MTID_ackToken   = 0b010
     _MTID_pingMobile = 0b011
     _MTID_pongMobile = 0b100
 
@@ -86,14 +86,18 @@ class esp_rtls_station:
         self.__checkIfStationInList(self.mac)
         self.stationID = self.__stationidFromMac(self.mac)
         self.__esp_now_add_other_stations()
+        self.mobile_list_raw = mobile_list
 
-        # Add Mobile with tokenID 0b0001
-        self.mobile_list[mobile_token] = esp_rtls_station_mobile_info(
-            mobile_token,
-            ubinascii.unhexlify(mobile_list[mobile_token]),
-            _STATE_0_noToken,
-            self.station_list,
-        )
+        # Add Mobiles
+        mobile_tokens = list(mobile_list.keys())
+        for mobile_token in mobile_tokens:
+            self.mobile_list[mobile_token] = esp_rtls_station_mobile_info(
+                mobile_token,
+                ubinascii.unhexlify(mobile_list[mobile_token]),
+                _STATE_0_noToken,
+                self.station_list,
+            )
+        self.__esp_now_add_mobiles()
 
         # If this is station 1, send parseToken to station 2
         if self.stationID == 1:
@@ -110,7 +114,9 @@ class esp_rtls_station:
                 [
                     _TRANSITION_4_parseToken_5_waitStation,
                     macNextStation,
-                    bytearray([TokenID, self.mobile_list[TokenID].RSSI[self.stationID]]),
+                    bytearray(
+                        [TokenID, self.mobile_list[TokenID].RSSI[self.stationID]]
+                    ),
                 ]
             )
             # self.__do_STATE_4_parseToken(macNextStation, TokenID, rssi1)
@@ -123,7 +129,7 @@ class esp_rtls_station:
         """Description: Loop of the station"""
 
         # Print token id and state to display
-        self.printInfoToDisplay()
+        self.__printInfoToDisplay()
 
         # Check if there is something in the task queue
         if self.__taskQueue != []:
@@ -153,14 +159,14 @@ class esp_rtls_station:
                 self.__do_STATE_2_pingMobile(TokenID)
                 self.mobile_list[TokenID].state = _STATE_3_waitMobile
 
-                # Dummy functionality
-                self.__taskQueue.append(
-                    [_TRANSITION_3_waitMobile_4_parseToken, mac, data]
-                )
+                # # Dummy functionality
+                # self.__taskQueue.append(
+                #     [_TRANSITION_3_waitMobile_4_parseToken, mac, data]
+                # )
 
             elif taskID == _TRANSITION_3_waitMobile_4_parseToken:
                 print("TRANSITION_3_waitMobile_4_parseToken")
-                self.__do_STATE_3_waitMobile(TokenID)
+                self.__do_STATE_3_waitMobile(mac, data, TokenID)
                 self.mobile_list[TokenID].state = _STATE_4_parseToken
 
                 self.__taskQueue.append(
@@ -185,19 +191,10 @@ class esp_rtls_station:
         if mac != None:
             self.handleRecievedData(mac, data)
 
-    def printInfoToDisplay(self):
-        self.display.fill(0)
-        self.display.text("TokenID: " + str(self.mobile_list[1].tokenID), 0, 0, 1)
-        self.display.text(
-            "State: " + str(self.mobile_list[1].state), 0, self.line_height, 1
-        )
-        self.display.text("RSSI: S1: " + str(self.mobile_list[1].RSSI[1]), 0, 2 * self.line_height, 1)
-        self.display.text("      S2: " + str(self.mobile_list[1].RSSI[2]), 0, 3 * self.line_height, 1)
-        self.display.text("      S3: " + str(self.mobile_list[1].RSSI[3]), 0, 4 * self.line_height, 1)
-        self.display.show()
+    
 
     def handleRecievedData(self, mac, data):
-        # Convert data (string) to byte array
+        # print data
         print("    data: " + str(data))
 
         # Match first 3 bit of data with the message type
@@ -209,8 +206,11 @@ class esp_rtls_station:
         elif msgType == self._MTID_ackToken:
             # self.__handleRecievedAckToken(mac, data)
             self.__taskQueue.append([_TRANSITION_5_waitStation_0_noToken, mac, data])
+        elif msgType == self._MTID_pongMobile:
+            
+            self.__taskQueue.append([_TRANSITION_3_waitMobile_4_parseToken, mac, data])
 
-    # Handler methods:
+    # State methods:
     def __do_STATE_0_noToken(self, mac, data):
         print("\nFUNC: __do_STATE_0_noToken")
         time.sleep(1)
@@ -218,19 +218,19 @@ class esp_rtls_station:
         # Isolate tokenID, msgType and rssi1 from the data
         tokenID = (data[0] & (0b00011111 << 0)) >> 0
         msgType = (data[0] & (0b11100000 << 0)) >> 5
-        rssi_recv_past      = data[1]
+        rssi_recv_past = data[1]
         rssi_recv_past_past = data[2]
 
         print("    msgType:   " + str(msgType))
         print("    tokenID:   " + str(tokenID))
         print("    rssi_recv_past:      " + str(rssi_recv_past))
         print("    rssi_recv_past_past: " + str(rssi_recv_past_past))
-        
+
         # Save RSSI from the past station
-        stationID_recieved  = self.__stationidFromMac(mac)
-        stationID_past      = ((self.stationID - 2) % len(self.station_list))+1
-        stationID_past_past = ((self.stationID - 3) % len(self.station_list))+1
-        
+        stationID_recieved = self.__stationidFromMac(mac)
+        stationID_past = ((self.stationID - 2) % len(self.station_list)) + 1
+        stationID_past_past = ((self.stationID - 3) % len(self.station_list)) + 1
+
         # check if the stationID_recieved is the stationID_past => If not => Error
         if stationID_recieved != stationID_past:
             # print error
@@ -238,20 +238,24 @@ class esp_rtls_station:
             # Display error
             self.display.fill(0)
             self.display.text("Error:", 0, 0, 1)
-            self.display.text("StationID_recieved != StationID_past", 0, self.line_height, 1)
-            self.display.text("recv: " + str(stationID_recieved), 0, self.line_height * 2, 1)
-            self.display.text("past: " + str(stationID_past), 0, self.line_height * 3, 1)
+            self.display.text(
+                "StationID_recieved != StationID_past", 0, self.line_height, 1
+            )
+            self.display.text(
+                "recv: " + str(stationID_recieved), 0, self.line_height * 2, 1
+            )
+            self.display.text(
+                "past: " + str(stationID_past), 0, self.line_height * 3, 1
+            )
             self.display.show()
             while True:
                 pass
-        
+
         self.mobile_list[tokenID].updateRSSI(stationID_past, rssi_recv_past)
-        
+
         # Save RSSI from the past past station
         self.mobile_list[tokenID].updateRSSI(stationID_past_past, rssi_recv_past_past)
-        
 
-    # State methods:
     def __do_STATE_1_sendAck(self, mac, tokenID):
         print("\nFUNC: __do_STATE_1_sendAck")
 
@@ -270,17 +274,37 @@ class esp_rtls_station:
 
         # Dummy state functionality
         time.sleep(1)
+        
+        # send ping to mobile
+        msgType = self._MTID_pingMobile
+        msgTokenID = tokenID
+        msgData = (msgType & 0b111) << 5 | msgTokenID
+        
+        self.esp_now.send(self.mobile_list[tokenID].mac, bytearray([msgData]), False)
 
-    def __do_STATE_3_waitMobile(self, tokenID):
+    def __do_STATE_3_waitMobile(self, mac, data, tokenID):
         print("\nFUNC: do_STATE_3_waitMobile")
 
         # Dummy state functionality
         time.sleep(1)
 
-        # Save RSSI of the mobile to the my station
-        self.mobile_list[tokenID].updateRSSI(
-            self.stationID, self.stationID * 10 + random.randint(0, 9)
-        )
+        #     # Save RSSI of the mobile to the my station
+        # self.mobile_list[tokenID].updateRSSI(
+        #     self.stationID, self.stationID * 10 + random.randint(0, 9)
+        # )
+        
+        # Extract RSSI from pong message
+        rssi_mobile_2_station = abs(self.esp_now.peers_table[mac][0])
+        print("    rssi_mobile_2_station: " + str(rssi_mobile_2_station))
+        
+        # Extract RSSI from data
+        rssi_station_2_mobile = data[1]
+        print("    rssi_station_2_mobile: " + str(rssi_station_2_mobile))
+        
+        # Average RSSI and save it
+        rssi_avg = round((rssi_mobile_2_station + rssi_station_2_mobile) / 2)
+        print("    rssi_avg: " + str(rssi_avg))
+        self.mobile_list[tokenID].updateRSSI(self.stationID, rssi_avg)
 
     def __do_STATE_4_parseToken(self, mac, tokenID):
         print("\nFUNC: do_STATE_4_parseToken")
@@ -293,16 +317,15 @@ class esp_rtls_station:
             ((self.stationID) % len(self.station_list)) + 1
         ]
         my_rssi = self.mobile_list[tokenID].RSSI[self.stationID]
-        
+
         # Get RSSI of the mobile to the previous station
-        stationID_past = ((self.stationID - 2) % len(self.station_list))+1
+        stationID_past = ((self.stationID - 2) % len(self.station_list)) + 1
         past_rssi = self.mobile_list[tokenID].RSSI[stationID_past]
 
         print("    Token send")
         print("        Msg send: " + str(msgData))
         print("        Token send length = " + str(len(bytearray([msgData]))))
         print("        my_rssi: " + str(my_rssi))
-        
 
         # Wait for 1 second
         time.sleep(1)
@@ -311,7 +334,7 @@ class esp_rtls_station:
         self.esp_now.send(macNextStation, bytearray([msgData, my_rssi, past_rssi]), 1)
 
     def __do_STATE_5_waitStation(self, data):
-        print("\nFUNC: __do_STATE_5_waitStation")
+        print("\nFUNC: do_STATE_5_waitStation")
 
         # Isolate tokenID, msgType and rssi1 from the data
         tokenID = (data[0] & (0b00011111 << 0)) >> 0
@@ -321,6 +344,23 @@ class esp_rtls_station:
         print("    tokenID: " + str(tokenID))
 
     # Private methods:
+    def __printInfoToDisplay(self):
+        self.display.fill(0)
+        self.display.text("TokenID: " + str(self.mobile_list[1].tokenID), 0, 0, 1)
+        self.display.text(
+            "State: " + str(self.mobile_list[1].state), 0, self.line_height, 1
+        )
+        self.display.text(
+            "RSSI: S1: " + str(self.mobile_list[1].RSSI[1]), 0, 2 * self.line_height, 1
+        )
+        self.display.text(
+            "      S2: " + str(self.mobile_list[1].RSSI[2]), 0, 3 * self.line_height, 1
+        )
+        self.display.text(
+            "      S3: " + str(self.mobile_list[1].RSSI[3]), 0, 4 * self.line_height, 1
+        )
+        self.display.show()
+    
     def __stationidFromMac(self, mac):
         """Find the stationID from the station MAC address
 
@@ -347,6 +387,32 @@ class esp_rtls_station:
 
         return stationID
 
+    def __mobileidFromMac(self, mac):
+        """Find the mobileID from the mobile MAC address
+
+        Args:
+            mac (bytestring): mac address of the mobile
+
+        Returns:
+            bytestring: mobileID
+        """
+
+        mobileID = None
+        for mobileID, mobileMAC in self.mobile_list_raw.items():
+            if mobileMAC == mac:
+                break
+
+        if mobileID == None:
+            # Print "Error: Station not in station list" on the display
+            self.display.fill(0)
+            self.display.text("Error:", 0, 0, 1)
+            self.display.text("Station not in list", 0, self.line_height, 1)
+            self.display.text(self.__mac_to_string(mac), 0, self.line_height * 2, 1)
+            while True:
+                pass
+
+        return mobileID
+    
     def __printStateLastLine(self, state, with_clear=True):
         if with_clear:
             self.display.fill(0)
@@ -396,6 +462,18 @@ class esp_rtls_station:
 
         self.display.text("ESPNow active", 0, 10, 1)
         self.display.show()
+
+    def __esp_now_add_mobiles(self):
+        """Add mobiles to the ESP-Now"""
+
+        for mobile in self.mobile_list.values():
+            self.esp_now.add_peer(mobile.mac)
+            print(
+                "Added mobile "
+                + str(mobile.tokenID)
+                + " to ESP-Now - MAC: "
+                + str(mobile.mac)
+            )
 
     def __esp_now_add_other_stations(self):
         """Add other stations to the ESP-Now"""
