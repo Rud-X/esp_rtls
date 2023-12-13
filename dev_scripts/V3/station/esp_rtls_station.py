@@ -43,7 +43,7 @@ class esp_rtls_station_mobile_info:
         self.tokenID = tokenID
         self.mac = mac
         self.state = state
-        self.RSSI = {stationID: None for stationID, stationMAC in stationIDs.items()}
+        self.RSSI = {stationID: 0 for stationID, stationMAC in stationIDs.items()}
 
     def updateRSSI(self, stationID, RSSI):
         """
@@ -71,7 +71,7 @@ class esp_rtls_station:
     i2c = None
     line_height = const(10)
     mobile_list = {}
-    
+
     # Task queue
     __taskQueue = []
 
@@ -86,7 +86,7 @@ class esp_rtls_station:
         self.__checkIfStationInList(self.mac)
         self.stationID = self.__stationidFromMac(self.mac)
         self.__esp_now_add_other_stations()
-        
+
         # Add Mobile with tokenID 0b0001
         self.mobile_list[mobile_token] = esp_rtls_station_mobile_info(
             mobile_token,
@@ -101,85 +101,99 @@ class esp_rtls_station:
             time.sleep(2)
 
             TokenID = 0b00001
-            macNextStation = self.station_list[((self.stationID ) % len(self.station_list)) + 1]
-            rssi1 = 40
-            
-            self.__taskQueue.append([_TRANSITION_4_parseToken_5_waitStation, macNextStation, bytearray([TokenID, rssi1])])
+            macNextStation = self.station_list[
+                ((self.stationID) % len(self.station_list)) + 1
+            ]
+            self.mobile_list[TokenID].RSSI[self.stationID] = 40
+
+            self.__taskQueue.append(
+                [
+                    _TRANSITION_4_parseToken_5_waitStation,
+                    macNextStation,
+                    bytearray([TokenID, self.mobile_list[TokenID].RSSI[self.stationID]]),
+                ]
+            )
             # self.__do_STATE_4_parseToken(macNextStation, TokenID, rssi1)
 
             print("    Message send")
-
-        
 
         self.__printStateLastLine("init DONE")
 
     def loop(self):
         """Description: Loop of the station"""
-        
+
         # Print token id and state to display
         self.printInfoToDisplay()
-        
+
         # Check if there is something in the task queue
         if self.__taskQueue != []:
             print("\nTASK QUEUE: " + str(self.__taskQueue))
             [taskID, mac, data] = self.__taskQueue.pop(0)
             # Isloate tokenID from data
             TokenID = (data[0] & (0b00011111 << 0)) >> 0
-            
+
             if taskID == _TRANSITION_0_noToken_1_sendACK:
                 print("TRANSITION_0_noToken_1_sendACK")
                 self.__do_STATE_0_noToken(mac, data)
                 self.mobile_list[TokenID].state = _STATE_1_sendACK
 
                 self.__taskQueue.append([_TRANSITION_1_sendACK_2_pingMobile, mac, data])
-            
+
             elif taskID == _TRANSITION_1_sendACK_2_pingMobile:
                 print("TRANSITION_1_sendACK_2_pingMobile")
                 self.__do_STATE_1_sendAck(mac, TokenID)
                 self.mobile_list[TokenID].state = _STATE_2_pingMobile
-                
-                self.__taskQueue.append([_TRANSITION_2_pingMobile_3_waitMobile, mac, data])
-            
+
+                self.__taskQueue.append(
+                    [_TRANSITION_2_pingMobile_3_waitMobile, mac, data]
+                )
+
             elif taskID == _TRANSITION_2_pingMobile_3_waitMobile:
                 print("TRANSITION_2_pingMobile_3_waitMobile")
                 self.__do_STATE_2_pingMobile(TokenID)
                 self.mobile_list[TokenID].state = _STATE_3_waitMobile
-                
+
                 # Dummy functionality
-                self.__taskQueue.append([_TRANSITION_3_waitMobile_4_parseToken, mac, data])
-            
+                self.__taskQueue.append(
+                    [_TRANSITION_3_waitMobile_4_parseToken, mac, data]
+                )
+
             elif taskID == _TRANSITION_3_waitMobile_4_parseToken:
                 print("TRANSITION_3_waitMobile_4_parseToken")
                 self.__do_STATE_3_waitMobile(TokenID)
                 self.mobile_list[TokenID].state = _STATE_4_parseToken
-                
-                self.__taskQueue.append([_TRANSITION_4_parseToken_5_waitStation, mac, data])
-                
+
+                self.__taskQueue.append(
+                    [_TRANSITION_4_parseToken_5_waitStation, mac, data]
+                )
+
             elif taskID == _TRANSITION_4_parseToken_5_waitStation:
                 print("TRANSITION_4_parseToken_5_waitStation")
-                self.__do_STATE_4_parseToken(mac, TokenID, 42)
+                self.__do_STATE_4_parseToken(mac, TokenID)
                 self.mobile_list[TokenID].state = _STATE_5_waitStation
-                
+
             elif taskID == _TRANSITION_5_waitStation_0_noToken:
                 print("TRANSITION_5_waitStation_0_noToken")
                 self.__do_STATE_5_waitStation(data)
                 self.mobile_list[TokenID].state = _STATE_0_noToken
-                
+
             else:
                 print("Error: TaskID not in task list")
-                
+
         # Check if there is a message => no timeout
         mac, data = self.esp_now.recv(0)
         if mac != None:
             self.handleRecievedData(mac, data)
-    
+
     def printInfoToDisplay(self):
         self.display.fill(0)
         self.display.text("TokenID: " + str(self.mobile_list[1].tokenID), 0, 0, 1)
-        self.display.text("State: " + str(self.mobile_list[1].state), 0, self.line_height, 1)
-        # self.display.text("RSSI: S1: " + str(self.mobile_list[1].RSSI[1]), 0, 2 * self.line_height, 1)
-        # self.display.text("      S2: " + str(self.mobile_list[1].RSSI[2]), 0, 3 * self.line_height, 1)
-        # self.display.text("      S3: " + str(self.mobile_list[1].RSSI[3]), 0, 4 * self.line_height, 1)
+        self.display.text(
+            "State: " + str(self.mobile_list[1].state), 0, self.line_height, 1
+        )
+        self.display.text("RSSI: S1: " + str(self.mobile_list[1].RSSI[1]), 0, 2 * self.line_height, 1)
+        self.display.text("      S2: " + str(self.mobile_list[1].RSSI[2]), 0, 3 * self.line_height, 1)
+        self.display.text("      S3: " + str(self.mobile_list[1].RSSI[3]), 0, 4 * self.line_height, 1)
         self.display.show()
 
     def handleRecievedData(self, mac, data):
@@ -204,98 +218,108 @@ class esp_rtls_station:
         # Isolate tokenID, msgType and rssi1 from the data
         tokenID = (data[0] & (0b00011111 << 0)) >> 0
         msgType = (data[0] & (0b11100000 << 0)) >> 5
-        rssi1 = data[1]
-        
-        print("    msgType: " + str(msgType))
-        print("    tokenID: " + str(tokenID))
-        print("    rssi1:   " + str(rssi1))
-                
-        # Add transition to task queue
-        # self.__taskQueue.append([_TRANSITION_0_noToken_1_sendACK, tokenID, mac])
-        # self.__do_STATE_1_sendAck(mac, tokenID)
-        
-        # # pingMobile
-        # self.__do_STATE_2_pingMobile(tokenID)
-        
-        # # waitMobile
-        # self.__do_STATE_3_waitMobile(tokenID)
+        rssi_recv_past      = data[1]
+        rssi_recv_past_past = data[2]
 
-        # # Parse token
-        # rssi1 = 42
-        # self.__do_STATE_4_parseToken(mac, tokenID, rssi1)
-    
-    # def __handleRecievedAckToken(self, mac, data):
-    #     print("\nFUNC: handleRecievedAckToken")
-
-    #     # Isolate tokenID, msgType and rssi1 from the data
-    #     tokenID = (data[0] & (0b00011111 << 0)) >> 0
-    #     msgType = (data[0] & (0b11100000 << 0)) >> 5
+        print("    msgType:   " + str(msgType))
+        print("    tokenID:   " + str(tokenID))
+        print("    rssi_recv_past:      " + str(rssi_recv_past))
+        print("    rssi_recv_past_past: " + str(rssi_recv_past_past))
         
-    #     print("    msgType: " + str(msgType))
-    #     print("    tokenID: " + str(tokenID))
+        # Save RSSI from the past station
+        stationID_recieved  = self.__stationidFromMac(mac)
+        stationID_past      = ((self.stationID - 2) % len(self.station_list))+1
+        stationID_past_past = ((self.stationID - 3) % len(self.station_list))+1
         
-    #     # Update state
-    #     self.mobile_list[tokenID].state = _STATE_0_noToken
-    #     self.printInfoToDisplay()
+        # check if the stationID_recieved is the stationID_past => If not => Error
+        if stationID_recieved != stationID_past:
+            # print error
+            print("Error: StationID_recieved != StationID_past")
+            # Display error
+            self.display.fill(0)
+            self.display.text("Error:", 0, 0, 1)
+            self.display.text("StationID_recieved != StationID_past", 0, self.line_height, 1)
+            self.display.text("recv: " + str(stationID_recieved), 0, self.line_height * 2, 1)
+            self.display.text("past: " + str(stationID_past), 0, self.line_height * 3, 1)
+            self.display.show()
+            while True:
+                pass
         
-    def __handleRecievedPongMobile(self, mac, data):
-        pass
+        self.mobile_list[tokenID].updateRSSI(stationID_past, rssi_recv_past)
+        
+        # Save RSSI from the past past station
+        self.mobile_list[tokenID].updateRSSI(stationID_past_past, rssi_recv_past_past)
+        
 
     # State methods:
     def __do_STATE_1_sendAck(self, mac, tokenID):
         print("\nFUNC: __do_STATE_1_sendAck")
-                
+
         # Dummy state functionality
         time.sleep(1)
-        
+
         # Send ackToken back to the station
         msgType = self._MTID_ackToken
         msgTokenID = tokenID
         msgData = (msgType & 0b111) << 5 | msgTokenID
-        
+
         self.esp_now.send(mac, bytearray([msgData]), False)
-        
+
     def __do_STATE_2_pingMobile(self, tokenID):
         print("\nFUNC: do_STATE_2_pingMobile")
-        
+
         # Dummy state functionality
         time.sleep(1)
-        
+
     def __do_STATE_3_waitMobile(self, tokenID):
         print("\nFUNC: do_STATE_3_waitMobile")
-        
+
         # Dummy state functionality
         time.sleep(1)
-    
-    def __do_STATE_4_parseToken(self, mac, tokenID, rssi1):
+
+        # Save RSSI of the mobile to the my station
+        self.mobile_list[tokenID].updateRSSI(
+            self.stationID, self.stationID * 10 + random.randint(0, 9)
+        )
+
+    def __do_STATE_4_parseToken(self, mac, tokenID):
         print("\nFUNC: do_STATE_4_parseToken")
-        
+
         # Send Parse Token back to the station  (for testing)
         msgType = self._MTID_parseToken
         msgTokenID = tokenID
         msgData = (msgType & 0b111) << 5 | msgTokenID
-        macNextStation = self.station_list[((self.stationID ) % len(self.station_list)) + 1]
+        macNextStation = self.station_list[
+            ((self.stationID) % len(self.station_list)) + 1
+        ]
+        my_rssi = self.mobile_list[tokenID].RSSI[self.stationID]
+        
+        # Get RSSI of the mobile to the previous station
+        stationID_past = ((self.stationID - 2) % len(self.station_list))+1
+        past_rssi = self.mobile_list[tokenID].RSSI[stationID_past]
 
         print("    Token send")
         print("        Msg send: " + str(msgData))
         print("        Token send length = " + str(len(bytearray([msgData]))))
+        print("        my_rssi: " + str(my_rssi))
+        
 
         # Wait for 1 second
         time.sleep(1)
 
         # Send token
-        self.esp_now.send(macNextStation, bytearray([msgData, rssi1]), 1)
-        
+        self.esp_now.send(macNextStation, bytearray([msgData, my_rssi, past_rssi]), 1)
+
     def __do_STATE_5_waitStation(self, data):
         print("\nFUNC: __do_STATE_5_waitStation")
 
         # Isolate tokenID, msgType and rssi1 from the data
         tokenID = (data[0] & (0b00011111 << 0)) >> 0
         msgType = (data[0] & (0b11100000 << 0)) >> 5
-        
+
         print("    msgType: " + str(msgType))
         print("    tokenID: " + str(tokenID))
-        
+
     # Private methods:
     def __stationidFromMac(self, mac):
         """Find the stationID from the station MAC address
@@ -324,12 +348,14 @@ class esp_rtls_station:
         return stationID
 
     def __printStateLastLine(self, state, with_clear=True):
-        if with_clear: self.display.fill(0)
+        if with_clear:
+            self.display.fill(0)
         self.display.text("State: " + str(state), 0, 5 * self.line_height, 1)
         self.display.show()
 
     def __printFunctionNameSecondLastLine(self, func, with_clear=True):
-        if with_clear: self.display.fill(0)
+        if with_clear:
+            self.display.fill(0)
         self.display.text("Func: " + func, 0, 4 * self.line_height, 1)
         self.display.show()
 

@@ -6,8 +6,8 @@ from esp_rtls_station import *
     # 1 => 08:b6:1f:88:85:dc => DevNr 1
     # 2 => d4:d4:da:59:ed:ac => DevNr 2
     # 3 => 58:bf:25:09:5e:50 => DevNr 3
-# list_of_stations = {1:'08b61f8885dc', 2:'d4d4da59edac', 3:'58bf25095e50'}
-list_of_stations = {1:'08b61f8885dc', 2:'d4d4da59edac'}
+list_of_stations = {1:'08b61f8885dc', 2:'d4d4da59edac', 3:'58bf25095e50'}
+# list_of_stations = {1:'08b61f8885dc', 2:'d4d4da59edac'}
 
 
 # List of mobiles
