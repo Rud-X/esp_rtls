@@ -104,7 +104,8 @@ class esp_rtls_station:
             macNextStation = self.station_list[((self.stationID ) % len(self.station_list)) + 1]
             rssi1 = 40
             
-            self.__do_STATE_4_parseToken(macNextStation, TokenID, rssi1)
+            self.__taskQueue.append([_TRANSITION_4_parseToken_5_waitStation, macNextStation, bytearray([TokenID, rssi1])])
+            # self.__do_STATE_4_parseToken(macNextStation, TokenID, rssi1)
 
             print("    Message send")
 
@@ -120,25 +121,49 @@ class esp_rtls_station:
         
         # Check if there is something in the task queue
         if self.__taskQueue != []:
-            [taskID, TokenID] = self.__taskQueue.pop(0)
+            print("\nTASK QUEUE: " + str(self.__taskQueue))
+            [taskID, mac, data] = self.__taskQueue.pop(0)
+            # Isloate tokenID from data
+            TokenID = (data[0] & (0b00011111 << 0)) >> 0
             
             if taskID == _TRANSITION_0_noToken_1_sendACK:
                 print("TRANSITION_0_noToken_1_sendACK")
+                self.__do_STATE_0_noToken(mac, data)
+                self.mobile_list[TokenID].state = _STATE_1_sendACK
+
+                self.__taskQueue.append([_TRANSITION_1_sendACK_2_pingMobile, mac, data])
             
             elif taskID == _TRANSITION_1_sendACK_2_pingMobile:
                 print("TRANSITION_1_sendACK_2_pingMobile")
+                self.__do_STATE_1_sendAck(mac, TokenID)
+                self.mobile_list[TokenID].state = _STATE_2_pingMobile
+                
+                self.__taskQueue.append([_TRANSITION_2_pingMobile_3_waitMobile, mac, data])
             
             elif taskID == _TRANSITION_2_pingMobile_3_waitMobile:
                 print("TRANSITION_2_pingMobile_3_waitMobile")
+                self.__do_STATE_2_pingMobile(TokenID)
+                self.mobile_list[TokenID].state = _STATE_3_waitMobile
+                
+                # Dummy functionality
+                self.__taskQueue.append([_TRANSITION_3_waitMobile_4_parseToken, mac, data])
             
             elif taskID == _TRANSITION_3_waitMobile_4_parseToken:
                 print("TRANSITION_3_waitMobile_4_parseToken")
+                self.__do_STATE_3_waitMobile(TokenID)
+                self.mobile_list[TokenID].state = _STATE_4_parseToken
+                
+                self.__taskQueue.append([_TRANSITION_4_parseToken_5_waitStation, mac, data])
                 
             elif taskID == _TRANSITION_4_parseToken_5_waitStation:
                 print("TRANSITION_4_parseToken_5_waitStation")
+                self.__do_STATE_4_parseToken(mac, TokenID, 42)
+                self.mobile_list[TokenID].state = _STATE_5_waitStation
                 
             elif taskID == _TRANSITION_5_waitStation_0_noToken:
                 print("TRANSITION_5_waitStation_0_noToken")
+                self.__do_STATE_5_waitStation(data)
+                self.mobile_list[TokenID].state = _STATE_0_noToken
                 
             else:
                 print("Error: TaskID not in task list")
@@ -165,13 +190,15 @@ class esp_rtls_station:
         msgType = (int(data[0]) & (0b11100000 << 0)) >> 5
 
         if msgType == self._MTID_parseToken:
-            self.__handleRecievedParseToken(mac, data)
+            # self.__do_STATE_0_noToken(mac, data)
+            self.__taskQueue.append([_TRANSITION_0_noToken_1_sendACK, mac, data])
         elif msgType == self._MTID_ackToken:
-            self.__handleRecievedAckToken(mac, data)
+            # self.__handleRecievedAckToken(mac, data)
+            self.__taskQueue.append([_TRANSITION_5_waitStation_0_noToken, mac, data])
 
     # Handler methods:
-    def __handleRecievedParseToken(self, mac, data):
-        print("\nFUNC: handleRecievedParseToken")
+    def __do_STATE_0_noToken(self, mac, data):
+        print("\nFUNC: __do_STATE_0_noToken")
         time.sleep(1)
 
         # Isolate tokenID, msgType and rssi1 from the data
@@ -182,48 +209,43 @@ class esp_rtls_station:
         print("    msgType: " + str(msgType))
         print("    tokenID: " + str(tokenID))
         print("    rssi1:   " + str(rssi1))
+                
+        # Add transition to task queue
+        # self.__taskQueue.append([_TRANSITION_0_noToken_1_sendACK, tokenID, mac])
+        # self.__do_STATE_1_sendAck(mac, tokenID)
         
-        # # Update state
-        # self.mobile_list[tokenID].state = _STATE_3_parseToken
+        # # pingMobile
+        # self.__do_STATE_2_pingMobile(tokenID)
         
-        self.__do_STATE_1_sendAck(mac, tokenID)
-        
-        # pingMobile
-        self.__do_STATE_2_pingMobile(tokenID)
-        
-        # waitMobile
-        self.__do_STATE_3_waitMobile(tokenID)
+        # # waitMobile
+        # self.__do_STATE_3_waitMobile(tokenID)
 
-        # Parse token
-        rssi1 = 42
-        self.__do_STATE_4_parseToken(mac, tokenID, rssi1)
+        # # Parse token
+        # rssi1 = 42
+        # self.__do_STATE_4_parseToken(mac, tokenID, rssi1)
     
-    def __handleRecievedAckToken(self, mac, data):
-        print("\nFUNC: handleRecievedAckToken")
+    # def __handleRecievedAckToken(self, mac, data):
+    #     print("\nFUNC: handleRecievedAckToken")
 
-        # Isolate tokenID, msgType and rssi1 from the data
-        tokenID = (data[0] & (0b00011111 << 0)) >> 0
-        msgType = (data[0] & (0b11100000 << 0)) >> 5
+    #     # Isolate tokenID, msgType and rssi1 from the data
+    #     tokenID = (data[0] & (0b00011111 << 0)) >> 0
+    #     msgType = (data[0] & (0b11100000 << 0)) >> 5
         
-        print("    msgType: " + str(msgType))
-        print("    tokenID: " + str(tokenID))
+    #     print("    msgType: " + str(msgType))
+    #     print("    tokenID: " + str(tokenID))
         
-        # Update state
-        self.mobile_list[tokenID].state = _STATE_0_noToken
-        self.printInfoToDisplay()
+    #     # Update state
+    #     self.mobile_list[tokenID].state = _STATE_0_noToken
+    #     self.printInfoToDisplay()
         
     def __handleRecievedPongMobile(self, mac, data):
         pass
 
     # State methods:
     def __do_STATE_1_sendAck(self, mac, tokenID):
-        print("\nFUNC: send_ackToken")
-        
-        # Update state
-        self.mobile_list[tokenID].state = _STATE_1_sendACK
-        
+        print("\nFUNC: __do_STATE_1_sendAck")
+                
         # Dummy state functionality
-        self.printInfoToDisplay()
         time.sleep(1)
         
         # Send ackToken back to the station
@@ -233,34 +255,20 @@ class esp_rtls_station:
         
         self.esp_now.send(mac, bytearray([msgData]), False)
         
-        # Update state to pingMobile
-        self.mobile_list[tokenID].state = _STATE_2_pingMobile
-        
     def __do_STATE_2_pingMobile(self, tokenID):
-        print("\nFUNC: do_STATE_1_pingMobile")
-        
-        # Update state
-        self.mobile_list[tokenID].state = _STATE_2_pingMobile
+        print("\nFUNC: do_STATE_2_pingMobile")
         
         # Dummy state functionality
-        self.printInfoToDisplay()
         time.sleep(1)
         
     def __do_STATE_3_waitMobile(self, tokenID):
-        print("\nFUNC: do_STATE_2_waitMobile")
-        
-        # Update state
-        self.mobile_list[tokenID].state = _STATE_3_waitMobile
+        print("\nFUNC: do_STATE_3_waitMobile")
         
         # Dummy state functionality
-        self.printInfoToDisplay()
         time.sleep(1)
     
     def __do_STATE_4_parseToken(self, mac, tokenID, rssi1):
-        print("\nFUNC: do_STATE_3_parseToken")
-        
-        # Update state
-        self.mobile_list[tokenID].state = _STATE_4_parseToken
+        print("\nFUNC: do_STATE_4_parseToken")
         
         # Send Parse Token back to the station  (for testing)
         msgType = self._MTID_parseToken
@@ -273,15 +281,20 @@ class esp_rtls_station:
         print("        Token send length = " + str(len(bytearray([msgData]))))
 
         # Wait for 1 second
-        self.printInfoToDisplay()
         time.sleep(1)
 
         # Send token
         self.esp_now.send(macNextStation, bytearray([msgData, rssi1]), 1)
         
-        # Update state
-        self.mobile_list[tokenID].state = _STATE_5_waitStation
+    def __do_STATE_5_waitStation(self, data):
+        print("\nFUNC: __do_STATE_5_waitStation")
+
+        # Isolate tokenID, msgType and rssi1 from the data
+        tokenID = (data[0] & (0b00011111 << 0)) >> 0
+        msgType = (data[0] & (0b11100000 << 0)) >> 5
         
+        print("    msgType: " + str(msgType))
+        print("    tokenID: " + str(tokenID))
         
     # Private methods:
     def __stationidFromMac(self, mac):
