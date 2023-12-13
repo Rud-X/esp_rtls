@@ -80,8 +80,8 @@ class esp_rtls_station:
             for stationID, stationMAC in station_list.items()
         }
         self.mac = network.WLAN(network.STA_IF).config("mac")
-        self.stationID = self.__stationidFromMac(self.mac)
         self.__checkIfStationInList(self.mac)
+        self.stationID = self.__stationidFromMac(self.mac)
         self.__esp_now_add_other_stations()
         
         # Add Mobile with tokenID 0b0001
@@ -95,8 +95,9 @@ class esp_rtls_station:
         # If this is station 1, send parseToken to station 2
         if self.stationID == 1:
             print("BEGIN: send parseToken to station 2")
+            time.sleep(2)
             self.mobile_list[mobile_token].state = _STATE_3_parseToken
-            self.__printStateLastLine(self.mobile_list[mobile_token].state)
+            # self.__printStateLastLine(self.mobile_list[mobile_token].state)
 
             # Send message to station 2
             msgType = self._MTID_parseToken
@@ -118,7 +119,7 @@ class esp_rtls_station:
             self.esp_now.send(mac, msgData_send, False)
             
             self.mobile_list[mobile_token].state = _STATE_0_noToken
-            self.__printStateLastLine(self.mobile_list[mobile_token].state)
+            # self.__printStateLastLine(self.mobile_list[mobile_token].state)
 
             print("    Message send")
 
@@ -128,75 +129,110 @@ class esp_rtls_station:
 
     def loop(self):
         """Description: Loop of the station"""
-
-        # Print debug loop counter (count up every time called) on the display
-        # If my mac address is the first in the station list, print "I am station 1" on the display on the second line
+        
+        # Print token id and state to display
         self.display.fill(0)
-        if self.stationID == 1:
-            self.display.text("I am station 1", 0, self.line_height * 2, 1)
-        self.display.text("Loop: " + str(random.randint(0, 100)), 0, 0, 1)
+        self.display.text("TokenID: " + str(self.mobile_list[1].tokenID), 0, 0, 1)
+        self.display.text("State: " + str(self.mobile_list[1].state), 0, self.line_height, 1)
+        # self.display.text("RSSI: S1: " + str(self.mobile_list[1].RSSI[1]), 0, 2 * self.line_height, 1)
+        # self.display.text("      S2: " + str(self.mobile_list[1].RSSI[2]), 0, 3 * self.line_height, 1)
+        # self.display.text("      S3: " + str(self.mobile_list[1].RSSI[3]), 0, 4 * self.line_height, 1)
         self.display.show()
 
         # Check if there is a message => no timeout
         mac, data = self.esp_now.recv(0)
         if mac != None:
-            print("Message recieved")
+            # print("Message recieved")
             self.handleRecievedData(mac, data)
 
     def handleRecievedData(self, mac, data):
-        self.__printFunctionNameSecondLastLine("handleRecievedData")
+        # print("\nFUNC: handleRecievedData")
+        # time.sleep(1)
 
         # Convert data (string) to byte array
-        print("data: " + str(data))
+        print("    data: " + str(data))
 
         # Match first 3 bit of data with the message type
         msgType = (int(data[0]) & (0b11100000 << 0)) >> 5
-        print("msgType: " + str(msgType))
+        # print("    msgType: " + str(msgType))
 
         if msgType == self._MTID_parseToken:
             self.__handleRecievedParseToken(mac, data)
+        elif msgType == self._MTID_ackToken:
+            self.__handleRecievedAckToken(mac, data)
 
     # Handler methods:
     def __handleRecievedParseToken(self, mac, data):
-        self.__printFunctionNameSecondLastLine("handleRecievedParseToken")
+        print("\nFUNC: handleRecievedParseToken")
+        time.sleep(1)
 
         # Isolate tokenID, msgType and rssi1 from the data
         tokenID = (data[0] & (0b00011111 << 0)) >> 0
         msgType = (data[0] & (0b11100000 << 0)) >> 5
         rssi1 = data[1]
-
-        self.display.text("msgType: " + str(msgType), 0, 1 * self.line_height, 1)
-        self.display.text("TokenID: " + str(tokenID), 0, 2 * self.line_height, 1)
-        self.display.text("rssi1: " + str(rssi1), 0, 3 * self.line_height, 1)
-
-        self.display.show()
+        
+        print("    msgType: " + str(msgType))
+        print("    tokenID: " + str(tokenID))
+        print("    rssi1:   " + str(rssi1))
         
         # Update state
         self.mobile_list[tokenID].state = _STATE_3_parseToken
-        self.__printStateLastLine(self.mobile_list[tokenID].state)
 
-        # wait for 1 second
+        # Send ackToken back to the station
+        msgType = self._MTID_ackToken
+        msgTokenID = tokenID
+        msgData = (msgType & 0b111) << 5 | msgTokenID
+        
+        self.esp_now.send(mac, bytearray([msgData]), False)
+
+        # Parse token
+        rssi1 = 42
+        self.__do_STATE_3_parseToken(mac, tokenID, rssi1)
+        
+    def __handleRecievedAckToken(self, mac, data):
+        print("\nFUNC: handleRecievedAckToken")
         time.sleep(1)
 
+        # Isolate tokenID, msgType and rssi1 from the data
+        tokenID = (data[0] & (0b00011111 << 0)) >> 0
+        msgType = (data[0] & (0b11100000 << 0)) >> 5
+        
+        print("    msgType: " + str(msgType))
+        print("    tokenID: " + str(tokenID))
+        
+        # Update state
+        self.mobile_list[tokenID].state = _STATE_0_noToken
+        
+    def __handleRecievedPongMobile(self, mac, data):
+        pass
+
+    # State methods:
+    def __do_STATE_1_pingMobile(self, tokenID):
+        pass
+    
+    def __do_STATE_3_parseToken(self, mac, tokenID, rssi1):
+        print("\nFUNC: do_STATE_3_parseToken")
+        
         # Send Parse Token back to the station  (for testing)
         msgType = self._MTID_parseToken
         msgTokenID = tokenID
         msgData = (msgType & 0b111) << 5 | msgTokenID
-        rssi1 = 42
+        macNextStation = self.station_list[((self.stationID ) % len(self.station_list)) + 1]
 
-        self.esp_now.send(mac, bytearray([msgData, rssi1]), 1)
+        print("    Token send")
+        print("        Msg send: " + str(msgData))
+        print("        Token send length = " + str(len(bytearray([msgData]))))
 
-        self.display.fill(0)
-        self.display.text("Token send: " + str(tokenID), 0, 5 * self.line_height, 1)
-        self.display.show()
-        print("Token send")
-        print("   Msg send: " + str(msgData))
-        print("   Token send length = " + str(len(bytearray([msgData]))))
+        # Wait for 1 second
+        # time.sleep(1)
+
+        # Send token
+        self.esp_now.send(macNextStation, bytearray([msgData, rssi1]), 1)
         
         # Update state
-        self.mobile_list[tokenID].state = _STATE_0_noToken
-        self.__printStateLastLine(self.mobile_list[tokenID].state)
-
+        self.mobile_list[tokenID].state = _STATE_4_waitStation
+        
+        
     # Private methods:
     def __stationidFromMac(self, mac):
         """Find the stationID from the station MAC address
@@ -224,13 +260,13 @@ class esp_rtls_station:
 
         return stationID
 
-    def __printStateLastLine(self, state):
-        self.display.fill(0)
+    def __printStateLastLine(self, state, with_clear=True):
+        if with_clear: self.display.fill(0)
         self.display.text("State: " + str(state), 0, 5 * self.line_height, 1)
         self.display.show()
 
-    def __printFunctionNameSecondLastLine(self, func):
-        self.display.fill(0)
+    def __printFunctionNameSecondLastLine(self, func, with_clear=True):
+        if with_clear: self.display.fill(0)
         self.display.text("Func: " + func, 0, 4 * self.line_height, 1)
         self.display.show()
 
