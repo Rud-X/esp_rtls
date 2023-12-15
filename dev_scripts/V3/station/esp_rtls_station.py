@@ -8,6 +8,12 @@ import espnow
 import uctypes
 
 # Constants:
+# Message-Type-ID (MTID): byte-strings
+_MTID_parseToken = const(0b001)
+_MTID_ackToken   = const(0b010)
+_MTID_pingMobile = const(0b011)
+_MTID_pongMobile = const(0b100)
+
 # States:
 _STATE_0_noToken = const(0)
 _STATE_1_sendACK = const(1)
@@ -24,6 +30,17 @@ _TRANSITION_3_waitMobile_4_parseToken = const(3)
 _TRANSITION_4_parseToken_5_waitStation = const(4)
 _TRANSITION_5_waitStation_0_noToken = const(5)
 
+# Timeout transition dictionary:
+# State to transition
+_TIMEOUT_DICT = {
+    _STATE_3_waitMobile: _TRANSITION_2_pingMobile_3_waitMobile,
+    _STATE_5_waitStation: _TRANSITION_4_parseToken_5_waitStation,
+}
+
+# Timeout transitions:
+_TIMEOUT_TRANSITION_3_waitMobile_2_pingMobile = const(6)
+_TIMEOUT_TRANSITION_5_waitStation_4_parseToken = const(7)
+
 
 class esp_rtls_station_mobile_info:
     """
@@ -38,6 +55,9 @@ class esp_rtls_station_mobile_info:
     Methods:
     - updateRSSI(stationID, RSSI) => Update the RSSI of the mobile to a station.
     """
+
+    # timeout timer
+    __timeout_ticks = None
 
     def __init__(self, tokenID, mac, state, stationIDs):
         self.tokenID = tokenID
@@ -55,14 +75,25 @@ class esp_rtls_station_mobile_info:
         """
         self.RSSI[stationID] = RSSI
 
+    def check_timeout(self):
+        """Check if the timeout timer has expired"""
+        if self.__timeout_ticks:
+            return time.ticks_diff(self.__timeout_ticks, time.ticks_ms()) < 0
+        else:
+            return False
+
+    def start_timeout_timer(self, timeout_ms):
+        """Start the timeout timer"""
+        self.__timeout_ticks = time.ticks_ms() + timeout_ms
+
+    def stop_timeout_timer(self):
+        """Stop the timeout timer"""
+        self.__timeout_ticks = None
+
 
 class esp_rtls_station:
     # Constants:
-    # Message-Type-ID (MTID): byte-strings
-    _MTID_parseToken = 0b001
-    _MTID_ackToken   = 0b010
-    _MTID_pingMobile = 0b011
-    _MTID_pongMobile = 0b100
+    
 
     # Attributes:
     sta = None
@@ -74,7 +105,7 @@ class esp_rtls_station:
 
     # Task queue
     __taskQueue = []
-    
+
     # debug time
     __debug_time = 0
     __debug_level_print = 0
@@ -163,6 +194,7 @@ class esp_rtls_station:
             elif taskID == _TRANSITION_2_pingMobile_3_waitMobile:
                 self.__print_debug("TRANSITION_2_pingMobile_3_waitMobile")
                 self.__do_STATE_2_pingMobile(TokenID)
+                self.mobile_list[TokenID].start_timeout_timer(1000)
                 self.mobile_list[TokenID].state = _STATE_3_waitMobile
 
                 # # Dummy functionality
@@ -173,6 +205,7 @@ class esp_rtls_station:
             elif taskID == _TRANSITION_3_waitMobile_4_parseToken:
                 self.__print_debug("TRANSITION_3_waitMobile_4_parseToken")
                 self.__do_STATE_3_waitMobile(mac, data, TokenID)
+                self.mobile_list[TokenID].stop_timeout_timer()
                 self.mobile_list[TokenID].state = _STATE_4_parseToken
 
                 self.__taskQueue.append(
@@ -181,23 +214,39 @@ class esp_rtls_station:
 
             elif taskID == _TRANSITION_4_parseToken_5_waitStation:
                 self.__print_debug("TRANSITION_4_parseToken_5_waitStation")
-                self.__do_STATE_4_parseToken(mac, TokenID)
+                self.__do_STATE_4_parseToken(TokenID)
+                self.mobile_list[TokenID].start_timeout_timer(1000)
                 self.mobile_list[TokenID].state = _STATE_5_waitStation
 
             elif taskID == _TRANSITION_5_waitStation_0_noToken:
                 self.__print_debug("TRANSITION_5_waitStation_0_noToken")
                 self.__do_STATE_5_waitStation(data)
+                self.mobile_list[TokenID].stop_timeout_timer()
                 self.mobile_list[TokenID].state = _STATE_0_noToken
 
             else:
                 self.__print_debug("Error: TaskID not in task list")
 
+        # Check mobiles for timeout
+        for mobile in self.mobile_list.values():
+            if mobile.check_timeout() and mobile.state in _TIMEOUT_DICT:
+                self.__print_debug("Timeout: " + str(mobile.tokenID))
+                
+                # print to display
+                self.display.fill(0)
+                self.display.text("Timeout: " + str(mobile.tokenID), 0, 0, 1)
+                self.display.show()
+                
+                msgData = mobile.tokenID & 0b11111
+                self.__taskQueue.append(
+                    [_TIMEOUT_DICT[mobile.state], mobile.mac, bytearray([msgData])]
+                )
+                mobile.stop_timeout_timer()
+
         # Check if there is a message => no timeout
         mac, data = self.esp_now.recv(0)
         if mac != None:
             self.handleRecievedData(mac, data)
-
-    
 
     def handleRecievedData(self, mac, data):
         # print data
@@ -206,14 +255,13 @@ class esp_rtls_station:
         # Match first 3 bit of data with the message type
         msgType = (int(data[0]) & (0b11100000 << 0)) >> 5
 
-        if msgType == self._MTID_parseToken:
+        if msgType == _MTID_parseToken:
             # self.__do_STATE_0_noToken(mac, data)
             self.__taskQueue.append([_TRANSITION_0_noToken_1_sendACK, mac, data])
-        elif msgType == self._MTID_ackToken:
+        elif msgType == _MTID_ackToken:
             # self.__handleRecievedAckToken(mac, data)
             self.__taskQueue.append([_TRANSITION_5_waitStation_0_noToken, mac, data])
-        elif msgType == self._MTID_pongMobile:
-            
+        elif msgType == _MTID_pongMobile:
             self.__taskQueue.append([_TRANSITION_3_waitMobile_4_parseToken, mac, data])
 
     # State methods:
@@ -269,7 +317,7 @@ class esp_rtls_station:
         time.sleep(self.__debug_time)
 
         # Send ackToken back to the station
-        msgType = self._MTID_ackToken
+        msgType = _MTID_ackToken
         msgTokenID = tokenID
         msgData = (msgType & 0b111) << 5 | msgTokenID
 
@@ -280,12 +328,12 @@ class esp_rtls_station:
 
         # Dummy state functionality
         time.sleep(self.__debug_time)
-        
+
         # send ping to mobile
-        msgType = self._MTID_pingMobile
+        msgType = _MTID_pingMobile
         msgTokenID = tokenID
         msgData = (msgType & 0b111) << 5 | msgTokenID
-        
+
         self.esp_now.send(self.mobile_list[tokenID].mac, bytearray([msgData]), True)
 
     def __do_STATE_3_waitMobile(self, mac, data, tokenID):
@@ -298,25 +346,25 @@ class esp_rtls_station:
         # self.mobile_list[tokenID].updateRSSI(
         #     self.stationID, self.stationID * 10 + random.randint(0, 9)
         # )
-        
+
         # Extract RSSI from pong message
-        rssi_mobile_2_station = abs(self.esp_now.peers_table[mac][0]) # type: ignore
+        rssi_mobile_2_station = abs(self.esp_now.peers_table[mac][0])  # type: ignore
         self.__print_debug("    rssi_mobile_2_station: " + str(rssi_mobile_2_station))
-        
+
         # Extract RSSI from data
         rssi_station_2_mobile = data[1]
         self.__print_debug("    rssi_station_2_mobile: " + str(rssi_station_2_mobile))
-        
+
         # Average RSSI and save it
         rssi_avg = round((rssi_mobile_2_station + rssi_station_2_mobile) / 2)
         self.__print_debug("    rssi_avg: " + str(rssi_avg))
         self.mobile_list[tokenID].updateRSSI(self.stationID, rssi_avg)
 
-    def __do_STATE_4_parseToken(self, mac, tokenID):
+    def __do_STATE_4_parseToken(self, tokenID):
         self.__print_debug("\nFUNC: do_STATE_4_parseToken")
 
         # Send Parse Token back to the station  (for testing)
-        msgType = self._MTID_parseToken
+        msgType = _MTID_parseToken
         msgTokenID = tokenID
         msgData = (msgType & 0b111) << 5 | msgTokenID
         macNextStation = self.station_list[
@@ -330,14 +378,18 @@ class esp_rtls_station:
 
         self.__print_debug("    Token send")
         self.__print_debug("        Msg send: " + str(msgData))
-        self.__print_debug("        Token send length = " + str(len(bytearray([msgData]))))
+        self.__print_debug(
+            "        Token send length = " + str(len(bytearray([msgData])))
+        )
         self.__print_debug("        my_rssi: " + str(my_rssi))
 
         # Wait for 1 second
         time.sleep(self.__debug_time)
 
         # Send token
-        self.esp_now.send(macNextStation, bytearray([msgData, my_rssi, past_rssi]), True)
+        self.esp_now.send(
+            macNextStation, bytearray([msgData, my_rssi, past_rssi]), True
+        )
 
     def __do_STATE_5_waitStation(self, data):
         self.__print_debug("\nFUNC: do_STATE_5_waitStation")
@@ -366,7 +418,7 @@ class esp_rtls_station:
             "      S3: " + str(self.mobile_list[1].RSSI[3]), 0, 4 * self.line_height, 1
         )
         self.display.show()
-    
+
     def __stationidFromMac(self, mac):
         """Find the stationID from the station MAC address
 
@@ -418,7 +470,7 @@ class esp_rtls_station:
                 pass
 
         return mobileID
-    
+
     def __printStateLastLine(self, state, with_clear=True):
         if with_clear:
             self.display.fill(0)
