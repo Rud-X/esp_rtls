@@ -29,6 +29,7 @@ _TRANSITION_2_pingMobile_3_waitMobile = const(2)
 _TRANSITION_3_waitMobile_4_parseToken = const(3)
 _TRANSITION_4_parseToken_5_waitStation = const(4)
 _TRANSITION_5_waitStation_0_noToken = const(5)
+_TRANSITION_0_noToken_2_pingMobile = const(6)
 
 # Timeout transition dictionary:
 # State to transition
@@ -108,7 +109,10 @@ class esp_rtls_station:
 
     # debug time
     __debug_time = 0
-    __debug_level_print = 0
+    __debug_level_print = 1
+        # 0: no print
+        # 1: location print
+        # 2: debug print
 
     def __init__(self, station_list, mobile_list, mobile_token):
         self.__print_debug("BEGIN: init")
@@ -223,6 +227,9 @@ class esp_rtls_station:
                 self.__do_STATE_5_waitStation(data)
                 self.mobile_list[TokenID].stop_timeout_timer()
                 self.mobile_list[TokenID].state = _STATE_0_noToken
+                
+                # print location
+                self.__print_location()
 
             else:
                 self.__print_debug("Error: TaskID not in task list")
@@ -556,6 +563,28 @@ class esp_rtls_station:
 
         return ubinascii.unhexlify(string.replace(":", ""))
 
-    def __print_debug(self, string):
+    def __print_location(self):
+        """
+        Print the rssi to the mobile from the different stations to the terminal
+        
+        Description:
+            - only if debug_level_print = 1
+            - As a list of 3 values (rssi1, rssi2, rssi3)
+        """
+        
         if self.__debug_level_print == 1:
+            print(
+                "("
+                + str(self.mobile_list[1].RSSI[1])
+                + ", "
+                + str(self.mobile_list[1].RSSI[2])
+                + ", "
+                + str(self.mobile_list[1].RSSI[3])
+                + ")"
+            )
+        
+        
+
+    def __print_debug(self, string):
+        if self.__debug_level_print == 2:
             print(string)
