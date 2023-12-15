@@ -77,10 +77,11 @@ class esp_rtls_station:
     
     # debug time
     __debug_time = 0
+    __debug_level_print = 0
 
     def __init__(self, station_list, mobile_list, mobile_token):
-        print("BEGIN: init")
-        print("    debug_time: " + str(self.__debug_time))
+        self.__print_debug("BEGIN: init")
+        self.__print_debug("    debug_time: " + str(self.__debug_time))
         self.__display_setup()
         self.__esp_now_setup()
         self.station_list = {  # Add the station to the station list
@@ -106,7 +107,7 @@ class esp_rtls_station:
 
         # If this is station 1, send parseToken to station 2
         if self.stationID == 1:
-            print("BEGIN: send parseToken to station 2")
+            self.__print_debug("BEGIN: send parseToken to station 2")
             time.sleep(3)
 
             TokenID = 0b00001
@@ -126,7 +127,7 @@ class esp_rtls_station:
             )
             # self.__do_STATE_4_parseToken(macNextStation, TokenID, rssi1)
 
-            print("    Message send")
+            self.__print_debug("    Message send")
 
         self.__printStateLastLine("init DONE")
 
@@ -138,20 +139,20 @@ class esp_rtls_station:
 
         # Check if there is something in the task queue
         if self.__taskQueue != []:
-            print("\nTASK QUEUE: " + str(self.__taskQueue))
+            self.__print_debug("\nTASK QUEUE: " + str(self.__taskQueue))
             [taskID, mac, data] = self.__taskQueue.pop(0)
             # Isloate tokenID from data
             TokenID = (data[0] & (0b00011111 << 0)) >> 0
 
             if taskID == _TRANSITION_0_noToken_1_sendACK:
-                print("TRANSITION_0_noToken_1_sendACK")
+                self.__print_debug("TRANSITION_0_noToken_1_sendACK")
                 self.__do_STATE_0_noToken(mac, data)
                 self.mobile_list[TokenID].state = _STATE_1_sendACK
 
                 self.__taskQueue.append([_TRANSITION_1_sendACK_2_pingMobile, mac, data])
 
             elif taskID == _TRANSITION_1_sendACK_2_pingMobile:
-                print("TRANSITION_1_sendACK_2_pingMobile")
+                self.__print_debug("TRANSITION_1_sendACK_2_pingMobile")
                 self.__do_STATE_1_sendAck(mac, TokenID)
                 self.mobile_list[TokenID].state = _STATE_2_pingMobile
 
@@ -160,7 +161,7 @@ class esp_rtls_station:
                 )
 
             elif taskID == _TRANSITION_2_pingMobile_3_waitMobile:
-                print("TRANSITION_2_pingMobile_3_waitMobile")
+                self.__print_debug("TRANSITION_2_pingMobile_3_waitMobile")
                 self.__do_STATE_2_pingMobile(TokenID)
                 self.mobile_list[TokenID].state = _STATE_3_waitMobile
 
@@ -170,7 +171,7 @@ class esp_rtls_station:
                 # )
 
             elif taskID == _TRANSITION_3_waitMobile_4_parseToken:
-                print("TRANSITION_3_waitMobile_4_parseToken")
+                self.__print_debug("TRANSITION_3_waitMobile_4_parseToken")
                 self.__do_STATE_3_waitMobile(mac, data, TokenID)
                 self.mobile_list[TokenID].state = _STATE_4_parseToken
 
@@ -179,17 +180,17 @@ class esp_rtls_station:
                 )
 
             elif taskID == _TRANSITION_4_parseToken_5_waitStation:
-                print("TRANSITION_4_parseToken_5_waitStation")
+                self.__print_debug("TRANSITION_4_parseToken_5_waitStation")
                 self.__do_STATE_4_parseToken(mac, TokenID)
                 self.mobile_list[TokenID].state = _STATE_5_waitStation
 
             elif taskID == _TRANSITION_5_waitStation_0_noToken:
-                print("TRANSITION_5_waitStation_0_noToken")
+                self.__print_debug("TRANSITION_5_waitStation_0_noToken")
                 self.__do_STATE_5_waitStation(data)
                 self.mobile_list[TokenID].state = _STATE_0_noToken
 
             else:
-                print("Error: TaskID not in task list")
+                self.__print_debug("Error: TaskID not in task list")
 
         # Check if there is a message => no timeout
         mac, data = self.esp_now.recv(0)
@@ -200,7 +201,7 @@ class esp_rtls_station:
 
     def handleRecievedData(self, mac, data):
         # print data
-        print("    data: " + str(data))
+        self.__print_debug("    data: " + str(data))
 
         # Match first 3 bit of data with the message type
         msgType = (int(data[0]) & (0b11100000 << 0)) >> 5
@@ -217,7 +218,7 @@ class esp_rtls_station:
 
     # State methods:
     def __do_STATE_0_noToken(self, mac, data):
-        print("\nFUNC: __do_STATE_0_noToken")
+        self.__print_debug("\nFUNC: __do_STATE_0_noToken")
         time.sleep(self.__debug_time)
 
         # Isolate tokenID, msgType and rssi1 from the data
@@ -226,10 +227,10 @@ class esp_rtls_station:
         rssi_recv_past = data[1]
         rssi_recv_past_past = data[2]
 
-        print("    msgType:   " + str(msgType))
-        print("    tokenID:   " + str(tokenID))
-        print("    rssi_recv_past:      " + str(rssi_recv_past))
-        print("    rssi_recv_past_past: " + str(rssi_recv_past_past))
+        self.__print_debug("    msgType:   " + str(msgType))
+        self.__print_debug("    tokenID:   " + str(tokenID))
+        self.__print_debug("    rssi_recv_past:      " + str(rssi_recv_past))
+        self.__print_debug("    rssi_recv_past_past: " + str(rssi_recv_past_past))
 
         # Save RSSI from the past station
         stationID_recieved = self.__stationidFromMac(mac)
@@ -239,7 +240,7 @@ class esp_rtls_station:
         # check if the stationID_recieved is the stationID_past => If not => Error
         if stationID_recieved != stationID_past:
             # print error
-            print("Error: StationID_recieved != StationID_past")
+            self.__print_debug("Error: StationID_recieved != StationID_past")
             # Display error
             self.display.fill(0)
             self.display.text("Error:", 0, 0, 1)
@@ -262,7 +263,7 @@ class esp_rtls_station:
         self.mobile_list[tokenID].updateRSSI(stationID_past_past, rssi_recv_past_past)
 
     def __do_STATE_1_sendAck(self, mac, tokenID):
-        print("\nFUNC: __do_STATE_1_sendAck")
+        self.__print_debug("\nFUNC: __do_STATE_1_sendAck")
 
         # Dummy state functionality
         time.sleep(self.__debug_time)
@@ -272,10 +273,10 @@ class esp_rtls_station:
         msgTokenID = tokenID
         msgData = (msgType & 0b111) << 5 | msgTokenID
 
-        self.esp_now.send(mac, bytearray([msgData]), False)
+        self.esp_now.send(mac, bytearray([msgData]), True)
 
     def __do_STATE_2_pingMobile(self, tokenID):
-        print("\nFUNC: do_STATE_2_pingMobile")
+        self.__print_debug("\nFUNC: do_STATE_2_pingMobile")
 
         # Dummy state functionality
         time.sleep(self.__debug_time)
@@ -285,10 +286,10 @@ class esp_rtls_station:
         msgTokenID = tokenID
         msgData = (msgType & 0b111) << 5 | msgTokenID
         
-        self.esp_now.send(self.mobile_list[tokenID].mac, bytearray([msgData]), False)
+        self.esp_now.send(self.mobile_list[tokenID].mac, bytearray([msgData]), True)
 
     def __do_STATE_3_waitMobile(self, mac, data, tokenID):
-        print("\nFUNC: do_STATE_3_waitMobile")
+        self.__print_debug("\nFUNC: do_STATE_3_waitMobile")
 
         # Dummy state functionality
         time.sleep(self.__debug_time)
@@ -299,20 +300,20 @@ class esp_rtls_station:
         # )
         
         # Extract RSSI from pong message
-        rssi_mobile_2_station = abs(self.esp_now.peers_table[mac][0])
-        print("    rssi_mobile_2_station: " + str(rssi_mobile_2_station))
+        rssi_mobile_2_station = abs(self.esp_now.peers_table[mac][0]) # type: ignore
+        self.__print_debug("    rssi_mobile_2_station: " + str(rssi_mobile_2_station))
         
         # Extract RSSI from data
         rssi_station_2_mobile = data[1]
-        print("    rssi_station_2_mobile: " + str(rssi_station_2_mobile))
+        self.__print_debug("    rssi_station_2_mobile: " + str(rssi_station_2_mobile))
         
         # Average RSSI and save it
         rssi_avg = round((rssi_mobile_2_station + rssi_station_2_mobile) / 2)
-        print("    rssi_avg: " + str(rssi_avg))
+        self.__print_debug("    rssi_avg: " + str(rssi_avg))
         self.mobile_list[tokenID].updateRSSI(self.stationID, rssi_avg)
 
     def __do_STATE_4_parseToken(self, mac, tokenID):
-        print("\nFUNC: do_STATE_4_parseToken")
+        self.__print_debug("\nFUNC: do_STATE_4_parseToken")
 
         # Send Parse Token back to the station  (for testing)
         msgType = self._MTID_parseToken
@@ -327,26 +328,26 @@ class esp_rtls_station:
         stationID_past = ((self.stationID - 2) % len(self.station_list)) + 1
         past_rssi = self.mobile_list[tokenID].RSSI[stationID_past]
 
-        print("    Token send")
-        print("        Msg send: " + str(msgData))
-        print("        Token send length = " + str(len(bytearray([msgData]))))
-        print("        my_rssi: " + str(my_rssi))
+        self.__print_debug("    Token send")
+        self.__print_debug("        Msg send: " + str(msgData))
+        self.__print_debug("        Token send length = " + str(len(bytearray([msgData]))))
+        self.__print_debug("        my_rssi: " + str(my_rssi))
 
         # Wait for 1 second
         time.sleep(self.__debug_time)
 
         # Send token
-        self.esp_now.send(macNextStation, bytearray([msgData, my_rssi, past_rssi]), 1)
+        self.esp_now.send(macNextStation, bytearray([msgData, my_rssi, past_rssi]), True)
 
     def __do_STATE_5_waitStation(self, data):
-        print("\nFUNC: do_STATE_5_waitStation")
+        self.__print_debug("\nFUNC: do_STATE_5_waitStation")
 
         # Isolate tokenID, msgType and rssi1 from the data
         tokenID = (data[0] & (0b00011111 << 0)) >> 0
         msgType = (data[0] & (0b11100000 << 0)) >> 5
 
-        print("    msgType: " + str(msgType))
-        print("    tokenID: " + str(tokenID))
+        self.__print_debug("    msgType: " + str(msgType))
+        self.__print_debug("    tokenID: " + str(tokenID))
 
     # Private methods:
     def __printInfoToDisplay(self):
@@ -473,7 +474,7 @@ class esp_rtls_station:
 
         for mobile in self.mobile_list.values():
             self.esp_now.add_peer(mobile.mac)
-            print(
+            self.__print_debug(
                 "Added mobile "
                 + str(mobile.tokenID)
                 + " to ESP-Now - MAC: "
@@ -486,7 +487,7 @@ class esp_rtls_station:
         for stationID, stationMAC in self.station_list.items():
             if stationMAC != self.mac:
                 self.esp_now.add_peer(stationMAC)
-                print(
+                self.__print_debug(
                     "Added station "
                     + str(stationID)
                     + " to ESP-Now - MAC: "
@@ -502,3 +503,7 @@ class esp_rtls_station:
         """Convert string to MAC address"""
 
         return ubinascii.unhexlify(string.replace(":", ""))
+
+    def __print_debug(self, string):
+        if self.__debug_level_print == 1:
+            print(string)

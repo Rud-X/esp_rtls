@@ -29,7 +29,7 @@ class esp_rtls_mobile:
     
     # debug time
     __debug_time = 0
-    
+    __debug_level_print = 0
     
     
     # Task queue
@@ -68,8 +68,7 @@ class esp_rtls_mobile:
         # Print info to display
         self.__printInfoToDisplay()    
         
-        self.changeLEDbyStationRSSI()
-    
+        
         
         # Check if there is a message in the buffer
         mac, data = self.esp_now.recv()
@@ -108,16 +107,16 @@ class esp_rtls_mobile:
                     elif stationID == 3:
                         self.LED_B.value(0)
                     else:
-                        print("Error: Unknown stationID")
-                        print("    stationID: " + str(stationID))
-                        print("    rssi: " + str(rssi))
-                        print("    lowestRSSI: " + str(lowestRSSI))
+                        self.__print_debug("Error: Unknown stationID")
+                        self.__print_debug("    stationID: " + str(stationID))
+                        self.__print_debug("    rssi: " + str(rssi))
+                        self.__print_debug("    lowestRSSI: " + str(lowestRSSI))
                         while True:
                             pass
         
     def handleRecievedData(self, mac, data):
         # print data
-        print("    data: " + str(data))
+        self.__print_debug("    data: " + str(data))
 
         # Match first 3 bit of data with the message type
         msgType = (int(data[0]) & (0b11100000 << 0)) >> 5
@@ -125,8 +124,8 @@ class esp_rtls_mobile:
         if msgType == self._MTID_pingMobile:
             self.__handlePingMobile(mac, data)
         else:
-            print("Error: Unknown message type")
-            print("    msgType: " + str(msgType))
+            self.__print_debug("Error: Unknown message type")
+            self.__print_debug("    msgType: " + str(msgType))
             
             self.display.fill(0)
             self.display.text("Error:", 0, 0, 1)
@@ -135,10 +134,10 @@ class esp_rtls_mobile:
             self.display.show()
     
     def __handlePingMobile(self, mac, data):
-        print("FUNC: __handlePingMobile")
+        self.__print_debug("FUNC: __handlePingMobile")
         # Read RSSI from messsage and send it back as a pong message
         rssi = abs(self.esp_now.peers_table[mac][0])
-        print("    rssi: " + str(rssi))
+        self.__print_debug("    rssi: " + str(rssi))
         
         stationID_recieved = self.__stationidFromMac(mac)
         
@@ -154,15 +153,18 @@ class esp_rtls_mobile:
         # Save rssi in station_rssi
         self.station_rssi[stationID_recieved] = rssi
         
-        
         # Create pong message
         msgType = self._MTID_pongMobile
         tokenID = (data[0] & (0b00011111 << 0)) >> 0
         msgData = (msgType & 0b111) << 5 | tokenID
         
         # Send pong message
-        self.esp_now.send(mac, bytearray([msgData, rssi]),1)
-        print("    pong sent")
+        self.esp_now.send(mac, bytearray([msgData, rssi]),True)
+        
+        # Change LED by station RSSI
+        self.changeLEDbyStationRSSI()
+        
+        self.__print_debug("    pong sent")
         
     def __printInfoToDisplay(self):
         """Print info to display"""
@@ -253,7 +255,7 @@ class esp_rtls_mobile:
 
         for stationID, stationMAC in self.station_list.items():
             self.esp_now.add_peer(stationMAC)
-            print(
+            self.__print_debug(
                 "Added station "
                 + str(stationID)
                 + " to ESP-Now - MAC: "
@@ -269,3 +271,7 @@ class esp_rtls_mobile:
         """Convert string to MAC address"""
 
         return ubinascii.unhexlify(string.replace(":", ""))
+
+    def __print_debug(self, string):
+        if self.__debug_level_print == 1:
+            print(string)
