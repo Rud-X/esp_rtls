@@ -37,18 +37,19 @@ ax.set_aspect('equal')
 ax.grid()
 
 # Functions
+def get_distance(rssi, rssi_at_1_meter=60, n=2):
+    distance = 10 ** (((-rssi_at_1_meter) - (-rssi) / (10 * n)))
+    
+    return distance
 
-   
+def calc_anchor_position(x1,y1, d_1_2, d_1_3, d_2_3):
+    x2 = x1 - d_2_3/2
+    x3 = x1 + d_2_3/2
+    y2 = y1 - math.sqrt(d_1_2**2 - x2**2)
+    y3 = y1 - math.sqrt(d_1_3**2 - x3**2)
+    return x2, y2, x3, y3
 
-def get_position(x1, y1, x2, y2, x3, y3, d1, d2, d3, distance_by_min, distance_by_max):
-    # Normalize the distances
-    d1 = (d1 - distance_by_min) / (distance_by_max - distance_by_min)
-    # Times the distance between the anchors
-    d1 = d1 * math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-    d2 = (d2 - distance_by_min) / (distance_by_max - distance_by_min)
-    d2 = d2 * math.sqrt((x3 - x2) ** 2 + (y3 - y2) ** 2)
-    d3 = (d3 - distance_by_min) / (distance_by_max - distance_by_min)
-    d3 = d3 * math.sqrt((x1 - x3) ** 2 + (y1 - y3) ** 2)
+def get_position(x1, y1, x2, y2, x3, y3, d1, d2, d3):
     
     A = 2 * x2 - 2 * x1
     B = 2 * y2 - 2 * y1
@@ -103,23 +104,12 @@ def moving_average_on_3_distances(d1, d2, d3, d_1_last, d_2_last, d_3_last):
     
 x1 = 0
 y1 = 0
-x2 = 100
-y2 = 0
-x3 = 50
-y3 = 100
-distance_by_min = 40
-distance_by_max = 70
 
 d_1_last = 0
 d_2_last = 0
 d_3_last = 0
 
-# Swap anchor 1 and 3
-x1, y1, x3, y3 = swap_position_of_2_anchors(x1, y1, x3, y3)
-
-# Swap anchor 2 and 3
-x2, y2, x3, y3 = swap_position_of_2_anchors(x2, y2, x3, y3)
-
+x2, y2, x3, y3 = calc_anchor_position(x1, y1, 50, 50, 50)
 # Main
 while True:
     ser_bytes = ser.readline()
@@ -128,13 +118,16 @@ while True:
     if decoded_bytes != "":
         decoded_bytes = decoded_bytes[1:-1]
         d1, d2, d3 = decoded_bytes.split(",")
-        d1, d2, d3 = moving_average_on_3_distances(int(d1), int(d2), int(d3), d_1_last, d_2_last, d_3_last)
+        d1 = get_distance((d1))
+        d2 = get_distance((d2))
+        d3 = get_distance((d3))
+        d1, d2, d3 = moving_average_on_3_distances(d1, d2, d3, d_1_last, d_2_last, d_3_last)
         d_1_last, d_2_last, d_3_last = d1, d2, d3
         print("d1 = ", d1)
         print("d2 = ", d2)
         print("d3 = ", d3)
         if d1 != 0 and d2 != 0 and d3 != 0:
-            x, y, d1, d2, d3 = get_position(x1, y1, x2, y2, x3, y3, d1, d2, d3, distance_by_min, distance_by_max)
+            x, y, d1, d2, d3 = get_position(x1, y1, x2, y2, x3, y3, d1, d2, d3)
             print("x = ", x)
             print("y = ", y)
             plot_position(x, y, x1, y1, x2, y2, x3, y3, d1, d2, d3)
