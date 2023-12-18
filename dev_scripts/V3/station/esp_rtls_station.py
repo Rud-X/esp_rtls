@@ -251,7 +251,7 @@ class esp_rtls_station:
                 mobile.stop_timeout_timer()
 
         # Check if there is a message => no timeout
-        mac, data = self.esp_now.recv(0)
+        mac, data = self.esp_now.irecv(0)
         if mac != None:
             self.handleRecievedData(mac, data)
 

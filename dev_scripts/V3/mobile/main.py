@@ -13,7 +13,7 @@ list_of_stations = {1:'08b61f8885dc', 2:'d4d4da59edac', 3:'58bf25095e50'}
     # 2 => 0b0010 ; 24:d7:eb:32:6c:34 => DevNr 5
 list_of_mobiles = {1: 'd4d4da5a92a0', 2: '24d7eb326c34'}
 
-esp_rtls_mobile = esp_rtls_mobile(list_of_stations, list_of_mobiles)
+esp_rtls_mobile = esp_rtls_mobile(list_of_stations, list_of_mobiles, 0, 1)
 
 # Loop
 while True:

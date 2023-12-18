@@ -1,5 +1,6 @@
 import random
 from machine import Pin, SoftI2C
+import machine
 import sh1106
 import time
 import network
@@ -26,6 +27,9 @@ class esp_rtls_mobile:
     sda_pin = const(21)
     i2c = None
     line_height = const(10)
+    msg_count = 0
+    old_msg_count = 0
+    avg_rssi = 0
     
     # debug time
     __debug_time = 0
@@ -35,7 +39,9 @@ class esp_rtls_mobile:
     # Task queue
     __taskQueue = []
     
-    def __init__(self, station_list, mobile_list):
+    def __init__(self, station_list, mobile_list, debug_time = 0, debug_level_print = 0):
+        self.__debug_time = debug_time
+        self.__debug_level_print = debug_level_print
         self.__display_setup()
         self.__esp_now_setup()
         self.station_list = {  # Add the station to the station list
@@ -68,10 +74,11 @@ class esp_rtls_mobile:
         # Print info to display
         self.__printInfoToDisplay()    
         
-        
-        
         # Check if there is a message in the buffer
-        mac, data = self.esp_now.recv()
+        try:
+            mac, data = self.esp_now.irecv()
+        except Exception as e:
+            machine.reset()
         if mac != None:
             self.handleRecievedData(mac, data)
     
@@ -153,6 +160,8 @@ class esp_rtls_mobile:
         # Save rssi in station_rssi
         self.station_rssi[stationID_recieved] = rssi
         
+        self.msg_count += 1
+        
         # Create pong message
         msgType = self._MTID_pongMobile
         tokenID = (data[0] & (0b00011111 << 0)) >> 0
@@ -168,11 +177,26 @@ class esp_rtls_mobile:
         
     def __printInfoToDisplay(self):
         """Print info to display"""
+        # if all RSSI values are not None
+        if all(rssi != None for rssi in self.station_rssi.values()) and \
+            self.old_msg_count != self.msg_count:
+            
+            if self.avg_rssi == 0:
+                self.avg_rssi = sum(self.station_rssi.values()) / len(self.station_rssi)
+            # Calculate average RSSI
+            new_avg_rssi = sum(self.station_rssi.values()) / len(self.station_rssi)
+            
+            self.avg_rssi = self.avg_rssi + (new_avg_rssi - self.avg_rssi) / self.msg_count
+            
+            self.old_msg_count = self.msg_count
+        
         self.display.fill(0)
         self.display.text("Mobile active", 0, 0, 1)
-        self.display.text("RSSI:  S1: " + str(self.station_rssi[1]), 0, self.line_height, 1)
-        self.display.text("       S2: " + str(self.station_rssi[2]), 0, self.line_height * 2, 1)
-        self.display.text("       S3: " + str(self.station_rssi[3]), 0, self.line_height * 3, 1)
+        self.display.text("RSSI:  S1:  " + str(self.station_rssi[1]), 0, self.line_height, 1)
+        self.display.text("       S2:  " + str(self.station_rssi[2]), 0, self.line_height * 2, 1)
+        self.display.text("       S3:  " + str(self.station_rssi[3]), 0, self.line_height * 3, 1)
+        self.display.text("       avg: " + str(self.avg_rssi), 0, self.line_height * 4, 1)
+        self.display.text("msgCount:   " + str(self.msg_count), 0, self.line_height * 5, 1)
         self.display.show()
         
     def __stationidFromMac(self, mac):
