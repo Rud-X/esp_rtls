@@ -37,8 +37,8 @@ ax.set_aspect('equal')
 ax.grid()
 
 # Functions
-def get_distance(rssi, rssi_at_1_meter=60, n=2):
-    distance = 10 ** (((-rssi_at_1_meter) - (-rssi) / (10 * n)))
+def get_distance(rssi, rssi_at_1_meter=60, n=2.0):
+    distance = 10 ** (((-rssi_at_1_meter) - (-rssi)) / (10 * n))
     
     return distance
 
@@ -78,10 +78,15 @@ def plot_position(x, y, x1, y1, x2, y2, x3, y3, d1, d2, d3):
     ax.scatter(x3, y3, c='b', marker='o')
     plt.pause(0.05)
     
-def clear_plot():
+def clear_plot(x1, y1, x2, y2, x3, y3):
     ax.clear()
-    ax.set_xlim([-2, 102])
-    ax.set_ylim([-2, 102])
+    # Calculate minimum and maximum of x and y
+    min_x = min(x1, x2, x3)
+    max_x = max(x1, x2, x3)
+    min_y = min(y1, y2, y3)
+    max_y = max(y1, y2, y3)
+    ax.set_xlim([min_x -abs(min_x/2), max_x + abs(min_x/2)])
+    ax.set_ylim([min_y -abs(min_y/2), max_y + abs(min_x/2)])
     ax.set_aspect('equal')
     ax.grid()
     
@@ -109,7 +114,7 @@ d_1_last = 0
 d_2_last = 0
 d_3_last = 0
 
-x2, y2, x3, y3 = calc_anchor_position(x1, y1, 50, 50, 50)
+x2, y2, x3, y3 = calc_anchor_position(x1, y1, 10, 8, 8)
 # Main
 while True:
     ser_bytes = ser.readline()
@@ -118,9 +123,9 @@ while True:
     if decoded_bytes != "":
         decoded_bytes = decoded_bytes[1:-1]
         d1, d2, d3 = decoded_bytes.split(",")
-        d1 = get_distance((d1))
-        d2 = get_distance((d2))
-        d3 = get_distance((d3))
+        d1 = get_distance(int(d1),58,2.5)
+        d2 = get_distance(int(d2),58,2.5)
+        d3 = get_distance(int(d3),58,2.5)
         d1, d2, d3 = moving_average_on_3_distances(d1, d2, d3, d_1_last, d_2_last, d_3_last)
         d_1_last, d_2_last, d_3_last = d1, d2, d3
         print("d1 = ", d1)
@@ -131,7 +136,7 @@ while True:
             print("x = ", x)
             print("y = ", y)
             plot_position(x, y, x1, y1, x2, y2, x3, y3, d1, d2, d3)
-            clear_plot()
+            clear_plot(x1, y1, x2, y2, x3, y3)
 #     try:
 #         ser_bytes = ser.readline()
 #         decoded_bytes = ser_bytes[0:len(ser_bytes)-2].decode("utf-8")
