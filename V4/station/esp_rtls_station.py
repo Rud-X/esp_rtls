@@ -105,7 +105,6 @@ class esp_rtls_station_mobile_info:
 
 
 class esp_rtls_station:
-    # Constants:
 
     # Attributes:
     sta = None
@@ -118,12 +117,12 @@ class esp_rtls_station:
     # Task queue
     __taskQueue = []
 
-    # debug time
+    # debug attributes:
     __debug_time = 0
     __debug_level_print = 2
-    # 0: no print
-    # 1: location print
-    # 2: debug print
+        # 0: no print
+        # 1: location print
+        # 2: debug print
 
     def __init__(self, station_list, mobile_list, mobile_token):
         self.__print_debug("BEGIN: init")
@@ -138,19 +137,6 @@ class esp_rtls_station:
         self.__checkIfStationInList(self.mac)
         self.stationID = self.__stationidFromMac(self.mac)
         self.__esp_now_add_other_stations()
-        
-        # Debug for dynamic registration
-        # # Add Mobiles
-        # self.mobile_list_raw = mobile_list
-        # mobile_tokens = list(mobile_list.keys())
-        # for mobile_token in mobile_tokens:
-        #     self.mobile_list[mobile_token] = esp_rtls_station_mobile_info(
-        #         mobile_token,
-        #         ubinascii.unhexlify(mobile_list[mobile_token]),
-        #         _STATE_0_noToken,
-        #         self.station_list,
-        #     )
-        # self.__esp_now_add_mobiles()
 
         # If this is station 1, send parseToken to station 2
         if self.stationID == 1 and False:
@@ -322,43 +308,6 @@ class esp_rtls_station:
                 self.mobile_list[TokenID].stop_timeout_timer()
                 self.mobile_list[TokenID].state = _STATE_0_noToken
                 pass
-
-            # elif taskID == _TRANSITION_0_noToken_a_newMFromS:
-            #     self.__print_debug("TRANSITION_0_noToken_a_newMobileFromStation")
-            #     alreadyRegistered = self.__do_STATE_a_newMobileFromStation(mac, task_data)
-                
-            #     if not alreadyRegistered: # if not registered => register
-            #         self.__print_debug("    Not registered: register")
-            #         # Not possible to register mobile before registration
-            #         #self.mobile_list[TokenID].state = _STATE_c_newMobileRegister
-            #         self.__taskQueue.append([_TRANSITION_aORc_newM_d_newMReg, mac, task_data])
-            #     else: # if registered => ping mobile
-            #         self.__print_debug("    Registered: ping mobile")
-            #         self.mobile_list[TokenID].state = _STATE_2_pingMobile
-            #         self.__taskQueue.append([_TRANSITION_2_pingMobile_3_waitMobile, mac, task_data])
-                    
-            # elif taskID == _TRANSITION_0_noToken_b_newMFromM:
-            #     self.__print_debug("TRANSITION_0_noToken_b_newMobileFromMobile")
-            #     self.__do_STATE_b_newMobileFromMobile(mac, task_data)
-            #     print("     Data: " + str(task_data))
-            #     # Not possible to register mobile before registration
-            #     #self.mobile_list[TokenID].state = _STATE_c_newMobileRegister
-            #     self.__taskQueue.append([_TRANSITION_aORc_newM_d_newMReg, mac, task_data])
-            #     pass
-
-            # elif taskID == _TRANSITION_aORc_newM_d_newMReg:
-            #     self.__print_debug("TRANSITION_aORb_newMobile_c_newMobileRegister")
-            #     self.__do_STATE_c_newMobileRegister(mac, task_data)
-            #     self.__taskQueue.append([_TRANSITION_c_newMReg_d_newMParseToken, mac, task_data])
-            #     self.mobile_list[TokenID].state = _STATE_d_parseToken
-            #     pass
-            
-            # elif taskID == _TRANSITION_c_newMReg_d_newMParseToken:
-            #     self.__print_debug("TRANSITION_c_newMobileRegister_d_parseToken")
-            #     self.__do_STATE_d_parseToken(mac, task_data)
-            #     self.mobile_list[TokenID].start_timeout_timer(1000)
-            #     self.mobile_list[TokenID].state = _STATE_e_waitStation
-            #     pass
             
             else:
                 self.__print_debug("Error: TaskID not in task list")
@@ -567,11 +516,6 @@ class esp_rtls_station:
         # Search for mobile in mobile_list
         return tokenID in self.mobile_list.keys()
     
-    def __do_STATE_b_newMobileFromMobile(self, mac, data):
-        self.__print_debug("\nFUNC: do_STATE_b_newMobileFromMobile")
-        
-        pass
-    
     def __do_STATE_c_newMobileRegister(self, mac, data):
         self.__print_debug("\nFUNC: do_STATE_c_newMobileRegister")
     
@@ -609,9 +553,7 @@ class esp_rtls_station:
         else:
             fromNewMfromM = False
             
-        return fromNewMfromM
-            
-        
+        return fromNewMfromM     
 
     def __do_STATE_d_newMSendMAck(self, mac, data):
         self.__print_debug("\nFUNC: do_STATE_d_newMSendMAck")    
@@ -671,36 +613,8 @@ class esp_rtls_station:
         self.__print_debug("    tokenID: " + str(tokenID))
         
         pass
-        
-    def __do_STATE_d_parseToken(self, mac, data):
-        self.__print_debug("\nFUNC: do_STATE_d_parseToken")
-        
-        # Isolate tokenID
-        tokenID = (data[0] & (0b00011111 << 0)) >> 0
-        
-        # Isolate mac
-            # mac is the last 6 bytes of data
-        mobile_mac = data[-6:]
-        
-        # Parse token to next station
-        self.__print_debug("    Parse token to next station")
-        msgType = _MTID_newMobile_fromStation
-        msgTokenID = tokenID
-        msgData = (msgType & 0b111) << 5 | msgTokenID
-        macNextStation = self.station_list[
-            ((self.stationID) % len(self.station_list)) + 1
-        ]
-        
-        # Send token
-        msgData = bytearray([msgData]) + mobile_mac
-        self.esp_now.send(
-            macNextStation, msgData, True
-        )
-        
-        self.__print_debug("    Token send")
 
     # Private methods:
-    
     def __printInfoToDisplay(self, tokenID):
         # Find position of the mobile in the mobile list
         mobile_position = None

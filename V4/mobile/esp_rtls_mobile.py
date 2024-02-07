@@ -81,7 +81,7 @@ class esp_rtls_mobile:
         self.display.show()
         
         # send register request
-        self.__sendRegisterRequest()
+        self.sendRegisterRequest()
         self.state = _STATE_a_sendRegisterRequest
         
     
@@ -100,7 +100,7 @@ class esp_rtls_mobile:
         # If state is _STATE_a_sendRegisterRequest, send register request and start timeout timer
         if self.state == _STATE_a_sendRegisterRequest:
             if self.check_timeout():
-                self.__sendRegisterRequest()
+                self.sendRegisterRequest()
     
     def changeLEDbyStationRSSI(self):
         # p19 => Station 1
@@ -141,7 +141,7 @@ class esp_rtls_mobile:
                         while True:
                             pass
 
-    def __sendRegisterRequest(self):
+    def sendRegisterRequest(self):
         """Send register request to all stations"""
         self.__print_debug("FUNC: __sendRegisterRequest")
         # Create register request message
@@ -208,6 +208,7 @@ class esp_rtls_mobile:
             self.display.text(str(msgType), 0, self.line_height * 2, 1)
             self.display.show()
     
+# Private Methods
     def __handlePingMobile(self, mac, data):
         self.__print_debug("FUNC: __handlePingMobile")
         # Read RSSI from messsage and send it back as a pong message
@@ -215,13 +216,6 @@ class esp_rtls_mobile:
         self.__print_debug("    rssi: " + str(rssi))
         
         stationID_recieved = self.__stationidFromMac(mac)
-        
-        # # Dummy functionality
-        # self.display.fill(0)
-        # self.display.text("Ping recieved", 0, 0, 1)
-        # self.display.text("rssi: " + str(rssi), 0, self.line_height, 1)
-        # self.display.text("from StID: " + str(stationID_recieved), 0, self.line_height * 2, 1)
-        # self.display.show()
         
         time.sleep(self.__debug_time)
         
@@ -292,6 +286,7 @@ class esp_rtls_mobile:
                 pass
 
         return stationID    
+    
     def __mobileidFromMac(self, mac):
         """Find the mobileID from the mobile MAC address
 
