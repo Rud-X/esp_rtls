@@ -138,30 +138,6 @@ class esp_rtls_station:
         self.stationID = self.__stationidFromMac(self.mac)
         self.__esp_now_add_other_stations()
 
-        # If this is station 1, send parseToken to station 2
-        if self.stationID == 1 and False:
-            self.__print_debug("BEGIN: send parseToken to station 2")
-            time.sleep(3)
-
-            TokenID = 0b00001
-            macNextStation = self.station_list[
-                ((self.stationID) % len(self.station_list)) + 1
-            ]
-            self.mobile_list[TokenID].RSSI[self.stationID] = 40
-
-            self.__taskQueue.append(
-                [
-                    _TRANSITION_4_parseToken_5_waitStation,
-                    macNextStation,
-                    bytearray(
-                        [TokenID, self.mobile_list[TokenID].RSSI[self.stationID]]
-                    ),
-                ]
-            )
-            # self.__do_STATE_4_parseToken(macNextStation, TokenID, rssi1)
-
-            self.__print_debug("    Message send")
-
         self.__printStateLastLine("init DONE")
 
     def loop(self):
