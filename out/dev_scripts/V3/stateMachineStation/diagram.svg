@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="377px" preserveAspectRatio="none" style="width:378px;height:377px;background:#FFFFFF;" version="1.1" viewBox="0 0 378 377" width="378px" zoomAndPan="magnify"><defs/><g><rect fill="#F1F1F1" height="40" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="66" x="231" y="7.3564"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="56" x="236" y="33.085">noToken</text><rect fill="#F1F1F1" height="40" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="64" x="14" y="7.3564"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="54" x="19" y="33.085">sendAck</text><rect fill="#F1F1F1" height="40" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="78" x="7" y="125.3564"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="68" x="12" y="151.085">pingMobile</text><rect fill="#F1F1F1" height="40" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="75" x="35.5" y="243.3564"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="65" x="40.5" y="269.085">waitMobile</text><rect fill="#F1F1F1" height="40" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="86" x="249" y="243.3564"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="76" x="254" y="269.085">parseToken</text><rect fill="#F1F1F1" height="40" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="78" x="225" y="125.3564"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="68" x="230" y="151.085">waitStation</text><ellipse cx="342" cy="27.3564" fill="#222222" rx="10" ry="10" style="stroke:none;stroke-width:1.0;"/><!--MD5=[1a439cfd23163da09f44c692e95e7f53]
+reverse link noToken to *start--><g id="link_noToken_*start"><path d="M302.35,27.3564 C312.19,27.3564 322.02,27.3564 331.85,27.3564 " fill="none" id="noToken-backto-*start" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="297.21,27.3564,306.21,31.3564,302.21,27.3564,306.21,23.3564,297.21,27.3564" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[3f93e401ce020c5453248f2937bfba4c]
+reverse link sendAck to noToken--><g id="link_sendAck_noToken"><path d="M83.35,27.3564 C124.88,27.3564 191.3,27.3564 230.99,27.3564 " fill="none" id="sendAck-backto-noToken" style="stroke:#0000FF;stroke-width:1.0;"/><polygon fill="#0000FF" points="78.17,27.3564,87.17,31.3564,83.17,27.3564,87.17,23.3564,78.17,27.3564" style="stroke:#0000FF;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="116" x="96.5" y="20.8516">recievedParseToken</text></g><!--MD5=[54f1bc1da7b408e941acefd6c333be89]
+link sendAck to pingMobile--><g id="link_sendAck_pingMobile"><path d="M46,47.5164 C46,67.3264 46,98.3364 46,119.9064 " fill="none" id="sendAck-to-pingMobile" style="stroke:#008000;stroke-width:1.0;"/><polygon fill="#008000" points="46,125.1764,50,116.1764,46,120.1764,42,116.1764,46,125.1764" style="stroke:#008000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="51" x="47" y="91.8516">sendAck</text></g><!--MD5=[388aab745c140922e154a335ab6a7015]
+link pingMobile to waitMobile--><g id="link_pingMobile_waitMobile"><path d="M28.3,165.4564 C18.09,178.8864 8.61,197.2564 16,213.3564 C20.68,223.5464 28.64,232.4164 37.15,239.7064 " fill="none" id="pingMobile-to-waitMobile" style="stroke:#008000;stroke-width:1.0;"/><polygon fill="#008000" points="41.36,243.1564,36.9132,234.3686,37.4851,239.9965,31.8573,240.5684,41.36,243.1564" style="stroke:#008000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="79" x="17" y="209.8516">sendPingMsg</text></g><!--MD5=[6d9f070bc5659a8a39964e2abb50202e]
+reverse link pingMobile to waitMobile--><g id="link_pingMobile_waitMobile"><path d="M80.37,169.0064 C88.67,176.3364 96.46,185.2264 101,195.3564 C108.17,211.3464 99.3,229.7264 89.69,243.1864 " fill="none" id="pingMobile-backto-waitMobile" style="stroke:#FF0000;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#FF0000" points="76.26,165.5364,80.5452,174.4042,80.0764,168.7668,85.7138,168.298,76.26,165.5364" style="stroke:#FF0000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="46" x="105" y="209.8516">Timeout</text></g><!--MD5=[1056dd7e37e4445401bf1a04a03cf1c5]
+link waitMobile to parseToken--><g id="link_waitMobile_parseToken"><path d="M110.65,263.3564 C147.4,263.3564 203.48,263.3564 243.54,263.3564 " fill="none" id="waitMobile-to-parseToken" style="stroke:#0000FF;stroke-width:1.0;"/><polygon fill="#0000FF" points="248.84,263.3564,239.84,259.3564,243.84,263.3564,239.84,267.3564,248.84,263.3564" style="stroke:#0000FF;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="102" x="128.75" y="256.8516">recievedPongMsg</text></g><!--MD5=[c5926c105a196a35baa75e5ca964ef9b]
+reverse link waitStation to parseToken--><g id="link_waitStation_parseToken"><path d="M248.5,170.0764 C242.01,183.0564 237.18,199.3164 243,213.3564 C247.79,224.9164 256.77,235.1664 265.75,243.2764 " fill="none" id="waitStation-backto-parseToken" style="stroke:#008000;stroke-width:1.0;"/><polygon fill="#008000" points="250.95,165.4464,243.2057,171.5313,248.6119,169.8661,250.2771,175.2723,250.95,165.4464" style="stroke:#008000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="67" x="244" y="209.8516">parseToken</text></g><!--MD5=[8ef29b093be4953649252ded314f2160]
+link waitStation to parseToken--><g id="link_waitStation_parseToken"><path d="M292.09,165.3764 C301.53,173.4064 310.94,183.6264 316,195.3564 C322.11,209.4964 316.57,225.7564 309.29,238.7164 " fill="none" id="waitStation-to-parseToken" style="stroke:#FF0000;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#FF0000" points="306.54,243.3364,314.5782,237.6455,309.0957,239.0389,307.7022,233.5564,306.54,243.3364" style="stroke:#FF0000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="46" x="319" y="209.8516">Timeout</text></g><!--MD5=[5dbf96e990e29929820a38e899e16486]
+reverse link noToken to waitStation--><g id="link_noToken_waitStation"><path d="M264,52.7764 C264,74.3364 264,105.3464 264,125.1764 " fill="none" id="noToken-backto-waitStation" style="stroke:#0000FF;stroke-width:1.0;"/><polygon fill="#0000FF" points="264,47.5164,260,56.5164,264,52.5164,268,56.5164,264,47.5164" style="stroke:#0000FF;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="105" x="265" y="91.8516">receivedAckToken</text></g><rect fill="#DDDDDD" height="64.8281" id="_legend" rx="7.5" ry="7.5" style="stroke:#000000;stroke-width:1.0;" width="150" x="107" y="296.3564"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="138" x="113" y="316.8896">blue  = outside trigger</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="135" x="113" y="334.499">green = inside trigger</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="83" x="113" y="352.1084">red   = timout</text><!--MD5=[1d9d51a89f3f3e91316e544b2e9fc5f8]
+@startuml diagram
+hide empty description
+
+state noToken
+state sendAck
+state pingMobile
+state waitMobile
+state parseToken
+state waitStation
+
+[*] -l-> noToken
+
+' [#blue]
+' [#red]
+
+noToken -l[#blue]-> sendAck: recievedParseToken
+
+sendAck -d[#green]-> pingMobile: sendAck
+
+pingMobile -d[#green]-> waitMobile: sendPingMsg
+waitMobile -u[#red,dashed]-> pingMobile: Timeout
+
+waitMobile -r[#blue]-> parseToken: recievedPongMsg
+
+parseToken -u[#green]-> waitStation: parseToken
+waitStation -d[#red,dashed]-> parseToken: Timeout
+
+waitStation -u[#blue]-> noToken: receivedAckToken
+
+legend
+blue  = outside trigger
+green = inside trigger
+red   = timout
+end legend
+@enduml
+
+@startuml diagram
+hide empty description
+
+state noToken
+state sendAck
+state pingMobile
+state waitMobile
+state parseToken
+state waitStation
+
+[*] -l-> noToken
+
+
+noToken -l[#blue]-> sendAck: recievedParseToken
+
+sendAck -d[#green]-> pingMobile: sendAck
+
+pingMobile -d[#green]-> waitMobile: sendPingMsg
+waitMobile -u[#red,dashed]-> pingMobile: Timeout
+
+waitMobile -r[#blue]-> parseToken: recievedPongMsg
+
+parseToken -u[#green]-> waitStation: parseToken
+waitStation -d[#red,dashed]-> parseToken: Timeout
+
+waitStation -u[#blue]-> noToken: receivedAckToken
+
+legend
+blue  = outside trigger
+green = inside trigger
+red   = timout
+end legend
+@enduml
+
+PlantUML version 1.2022.7(Mon Aug 22 19:01:30 CEST 2022)
+(GPL source distribution)
+Java Runtime: Java(TM) SE Runtime Environment
+JVM: Java HotSpot(TM) 64-Bit Server VM
+Default Encoding: Cp1252
+Language: en
+Country: US
+--></g></svg>

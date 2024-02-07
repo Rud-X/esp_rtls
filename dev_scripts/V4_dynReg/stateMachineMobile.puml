@@ -1,0 +1,22 @@
+@startuml diagram
+hide empty description
+
+
+state noData
+state sendPong
+
+[*] -d-> noData
+
+' [#blue]
+' [#red]
+
+noData -[#blue]-> sendPong: recievedPing
+
+sendPong -[#green]-> noData: sendPong
+
+legend
+blue  = outside trigger
+green = inside trigger
+red   = timout
+end legend
+@enduml

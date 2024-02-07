@@ -1,0 +1,50 @@
+@startuml diagram
+hide empty description
+
+state noToken
+state NewMfromM
+state NewMReg
+state NewMSendMAck
+state NewMParseToken
+state NewMWaitStation
+state NewMSendSAck
+state NewMfromS
+state PingMobile
+
+state c <<choice>>
+state d <<choice>>
+
+[*] -d-> noToken
+
+' [#blue]
+' [#green]
+' [#red,dashed]
+
+noToken         -d[#blue]->         NewMfromM : MRegFromM
+NewMfromM       -d[#green]->        NewMReg : NewMReg
+NewMSendMAck    -r[#green]->        NewMParseToken 
+
+noToken         -d[#blue]->         PingMobile : Token\nrecieved
+
+noToken         -d[#blue]->         NewMfromS : MRegFromS
+NewMfromS       -d[#green]->        NewMSendSAck : NewMSendSAck
+NewMSendSAck    -d[#green]->        d
+d               -l[#green]->        NewMReg : [M not registered]
+d               -d[#green]->        PingMobile : [M registered]
+
+NewMReg         -d[#green]->        c
+c               -d[#green]->        NewMSendMAck : [msg from M]
+c               -d[#green]->        NewMParseToken : [msg from S]
+
+NewMParseToken  -d[#green]->        NewMWaitStation : NewMWaitStation
+NewMWaitStation -u[#red,dashed]->   NewMParseToken : timeout
+
+NewMWaitStation -u[#blue]->  noToken : AckRecv
+
+
+legend
+blue  = outside trigger
+green = inside trigger
+red   = timout
+end legend
+@enduml

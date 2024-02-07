@@ -1,0 +1,27 @@
+@startuml diagram
+
+hide empty description
+
+state sendRegMsg
+state noData
+state sendPong
+
+[*] -d-> sendRegMsg
+
+' [#blue]
+' [#red]
+
+sendRegMsg -[#red,dashed]-> sendRegMsg: timeout\nsend reg msg
+
+sendRegMsg -[#blue]-> noData: recievedAck
+
+noData -[#blue]-> sendPong: recievedPing
+
+sendPong -[#green]-> noData: sendPong
+
+legend
+blue  = outside trigger
+green = inside trigger
+red   = timout
+end legend
+@enduml

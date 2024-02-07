@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="794px" preserveAspectRatio="none" style="width:521px;height:794px;background:#FFFFFF;" version="1.1" viewBox="0 0 521 794" width="521px" zoomAndPan="magnify"><defs/><g><rect fill="#F1F1F1" height="40" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="66" x="307" y="87"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="56" x="312" y="112.7285">noToken</text><rect fill="#F1F1F1" height="40" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="86" x="177" y="205"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="76" x="182" y="230.7285">NewMfromM</text><rect fill="#F1F1F1" height="40" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="73" x="183.5" y="323"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="63" x="188.5" y="348.7285">NewMReg</text><rect fill="#F1F1F1" height="40" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="114" x="7" y="543"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="104" x="12" y="568.7285">NewMSendMAck</text><rect fill="#F1F1F1" height="40" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="124" x="156" y="543"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="114" x="161" y="568.7285">NewMParseToken</text><rect fill="#F1F1F1" height="40" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="119" x="243.5" y="661"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="109" x="248.5" y="686.7285">NewMWaitStation</text><rect fill="#F1F1F1" height="40" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="112" x="295" y="323"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="102" x="300" y="348.7285">NewMSendSAck</text><rect fill="#F1F1F1" height="40" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="84" x="298" y="205"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="74" x="303" y="230.7285">NewMfromS</text><rect fill="#F1F1F1" height="40" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="79" x="315.5" y="543"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="69" x="320.5" y="568.7285">PingMobile</text><g id="elem_c"><polygon fill="#F1F1F1" points="168,441,180,453,168,465,156,453,168,441" style="stroke:#181818;stroke-width:0.5;"/></g><g id="elem_d"><polygon fill="#F1F1F1" points="353,441,365,453,353,465,341,453,353,441" style="stroke:#181818;stroke-width:0.5;"/></g><ellipse cx="340" cy="16" fill="#222222" rx="10" ry="10" style="stroke:none;stroke-width:1.0;"/><!--MD5=[8356f3c2d09ea13f8522f00b5f5b889e]
+link *start to noToken--><g id="link_*start_noToken"><path d="M340,26.19 C340,39.18 340,63.38 340,81.73 " fill="none" id="*start-to-noToken" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="340,86.74,344,77.74,340,81.74,336,77.74,340,86.74" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[e6f3c8c442d277c6d77440d6f76b366e]
+link noToken to NewMfromM--><g id="link_noToken_NewMfromM"><path d="M306.76,121.69 C289.69,129.98 269.5,141.88 255,157 C243.27,169.23 234.47,186.17 228.62,199.96 " fill="none" id="noToken-to-NewMfromM" style="stroke:#0000FF;stroke-width:1.0;"/><polygon fill="#0000FF" points="226.6,204.88,233.7181,198.0732,228.4987,200.2545,226.3173,195.0352,226.6,204.88" style="stroke:#0000FF;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="75" x="256" y="171.4951">MRegFromM</text></g><!--MD5=[ef779df58e173c7358df1da3d3ac3afd]
+link NewMfromM to NewMReg--><g id="link_NewMfromM_NewMReg"><path d="M220,245.16 C220,264.97 220,295.98 220,317.55 " fill="none" id="NewMfromM-to-NewMReg" style="stroke:#008000;stroke-width:1.0;"/><polygon fill="#008000" points="220,322.82,224,313.82,220,317.82,216,313.82,220,322.82" style="stroke:#008000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="59" x="221" y="289.4951">NewMReg</text></g><!--MD5=[515f483bcfb8f05710a109a6d9cf27fb]
+link NewMSendMAck to NewMParseToken--><g id="link_NewMSendMAck_NewMParseToken"><path d="M121.15,563 C131.03,563 140.91,563 150.79,563 " fill="none" id="NewMSendMAck-to-NewMParseToken" style="stroke:#008000;stroke-width:1.0;"/><polygon fill="#008000" points="155.95,563,146.95,559,150.95,563,146.95,567,155.95,563" style="stroke:#008000;stroke-width:1.0;"/></g><!--MD5=[9c6a7decd909e9c6740db45970c37ec6]
+link noToken to NewMfromS--><g id="link_noToken_NewMfromS"><path d="M340,127.16 C340,146.97 340,177.98 340,199.55 " fill="none" id="noToken-to-NewMfromS" style="stroke:#0000FF;stroke-width:1.0;"/><polygon fill="#0000FF" points="340,204.82,344,195.82,340,199.82,336,195.82,340,204.82" style="stroke:#0000FF;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="73" x="341" y="171.4951">MRegFromS</text></g><!--MD5=[029bc454a738847a372e75b8b6a4a52e]
+link NewMfromS to NewMSendSAck--><g id="link_NewMfromS_NewMSendSAck"><path d="M336.22,245.16 C334.15,258.61 332.45,276.99 335,293 C336.33,301.34 338.85,310.2 341.51,318.05 " fill="none" id="NewMfromS-to-NewMSendSAck" style="stroke:#008000;stroke-width:1.0;"/><polygon fill="#008000" points="343.17,322.8,343.959,312.9828,341.5119,318.0829,336.4117,315.6358,343.17,322.8" style="stroke:#008000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="98" x="336" y="289.4951">NewMSendSAck</text></g><!--MD5=[69f05a0cdf162c901269979a6ec1c404]
+link NewMSendSAck to d--><g id="link_NewMSendSAck_d"><path d="M351.35,363.06 C351.74,383.76 352.34,416.47 352.7,435.92 " fill="none" id="NewMSendSAck-to-d" style="stroke:#008000;stroke-width:1.0;"/><polygon fill="#008000" points="352.8,441.04,356.6192,431.9618,352.7,436.041,348.6208,432.1218,352.8,441.04" style="stroke:#008000;stroke-width:1.0;"/></g><!--MD5=[a2a88370f3fadb8d59a33e8aeed6bd2f]
+reverse link NewMReg to d--><g id="link_NewMReg_d"><path d="M221.85,368.08 C224.11,382.18 229.09,399.44 240,411 C268.36,441.05 320.45,449.14 342.59,451.27 " fill="none" id="NewMReg-backto-d" style="stroke:#008000;stroke-width:1.0;"/><polygon fill="#008000" points="221.13,363.04,218.4277,372.5109,221.8291,367.9909,226.3491,371.3923,221.13,363.04" style="stroke:#008000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="102" x="241" y="407.4951">[M not registered]</text></g><!--MD5=[e0397a9e30aa293afcdfc383d0fd79f5]
+link d to PingMobile--><g id="link_d_PingMobile"><path d="M352.87,464.88 C352.75,476.71 352.66,496.2 353,513 C353.16,521.02 353.48,529.78 353.81,537.64 " fill="none" id="d-to-PingMobile" style="stroke:#008000;stroke-width:1.0;"/><polygon fill="#008000" points="354.04,542.92,357.6248,533.7467,353.8117,537.9252,349.6332,534.1121,354.04,542.92" style="stroke:#008000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="80" x="354" y="509.4951">[M registered]</text></g><!--MD5=[501cfc3a905555592cdaf283443a057a]
+link NewMReg to c--><g id="link_NewMReg_c"><path d="M207.14,363.07 C201.47,371.94 194.98,382.78 190,393 C182.63,408.14 176.17,426.41 172.18,438.57 " fill="none" id="NewMReg-to-c" style="stroke:#008000;stroke-width:1.0;"/><polygon fill="#008000" points="170.63,443.38,177.1915,436.0351,172.1596,438.6197,169.575,433.5878,170.63,443.38" style="stroke:#008000;stroke-width:1.0;"/></g><!--MD5=[0feda4f909b157be17f58482b2851b98]
+link c to NewMSendMAck--><g id="link_c_NewMSendMAck"><path d="M160.08,457.22 C146.55,463.05 118.72,476.47 101,495 C89.14,507.4 79.83,524.34 73.52,538.08 " fill="none" id="c-to-NewMSendMAck" style="stroke:#008000;stroke-width:1.0;"/><polygon fill="#008000" points="71.33,542.99,78.6615,536.4136,73.3753,538.4275,71.3615,533.1412,71.33,542.99" style="stroke:#008000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="77" x="102" y="509.4951">[msg from M]</text></g><!--MD5=[20a6ba11ca984c10464c90a801c03b0a]
+link c to NewMParseToken--><g id="link_c_NewMParseToken"><path d="M171.6,461.77 C178.9,477.55 195.74,513.91 206.99,538.23 " fill="none" id="c-to-NewMParseToken" style="stroke:#008000;stroke-width:1.0;"/><polygon fill="#008000" points="209.17,542.92,208.9871,533.0728,207.0548,538.3894,201.7382,536.4572,209.17,542.92" style="stroke:#008000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="75" x="196" y="509.4951">[msg from S]</text></g><!--MD5=[c31da26114f809564fe5cf90d71c87af]
+link NewMParseToken to NewMWaitStation--><g id="link_NewMParseToken_NewMWaitStation"><path d="M237.88,583.12 C246.41,591.83 256.19,602.52 264,613 C274.1,626.55 283.68,642.93 290.81,656.1 " fill="none" id="NewMParseToken-to-NewMWaitStation" style="stroke:#008000;stroke-width:1.0;"/><polygon fill="#008000" points="293.33,660.8,292.5945,650.9786,290.9638,656.3954,285.547,654.7646,293.33,660.8" style="stroke:#008000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="104" x="277" y="627.4951">NewMWaitStation</text></g><!--MD5=[7c1981e6c3a150037e0af6a3202468c5]
+reverse link NewMParseToken to NewMWaitStation--><g id="link_NewMParseToken_NewMWaitStation"><path d="M208.67,588.08 C205.03,601.58 203.33,618.23 211,631 C218.73,643.88 231.12,653.56 244.33,660.75 " fill="none" id="NewMParseToken-backto-NewMWaitStation" style="stroke:#FF0000;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#FF0000" points="210.08,583.26,203.6994,590.7625,208.6669,588.0561,211.3732,593.0236,210.08,583.26" style="stroke:#FF0000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="43" x="212" y="627.4951">timeout</text></g><!--MD5=[f5fe02398c71b70ec23b1c91b3db7869]
+reverse link noToken to NewMWaitStation--><g id="link_noToken_NewMWaitStation"><path d="M377.77,124.79 C413.27,143.44 461,177.21 461,224 C461,224 461,224 461,564 C461,614.7 407.48,645.68 362.73,662.72 " fill="none" id="noToken-backto-NewMWaitStation" style="stroke:#0000FF;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#0000FF" points="373.06,122.37,379.2331,130.0442,377.5061,124.6574,382.8929,122.9304,373.06,122.37" style="stroke:#0000FF;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="51" x="462" y="407.4951">AckRecv</text></g><rect fill="#DDDDDD" height="64.8281" id="_legend" rx="7.5" ry="7.5" style="stroke:#000000;stroke-width:1.0;" width="150" x="178.5" y="714"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="138" x="184.5" y="734.5332">blue  = outside trigger</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="135" x="184.5" y="752.1426">green = inside trigger</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="83" x="184.5" y="769.752">red   = timout</text><!--MD5=[f081e167818897a5992f67121e271559]
+@startuml diagram
+hide empty description
+
+state noToken
+state NewMfromM
+state NewMReg
+state NewMSendMAck
+state NewMParseToken
+state NewMWaitStation
+state NewMSendSAck
+state NewMfromS
+state PingMobile
+
+state c <<choice>>
+state d <<choice>>
+
+[*] -d-> noToken
+
+' [#blue]
+' [#green]
+' [#red,dashed]
+
+noToken         -d[#blue]->         NewMfromM : MRegFromM
+NewMfromM       -d[#green]->        NewMReg : NewMReg
+NewMSendMAck    -r[#green]->        NewMParseToken 
+
+noToken         -d[#blue]->         NewMfromS : MRegFromS
+NewMfromS       -d[#green]->        NewMSendSAck : NewMSendSAck
+NewMSendSAck    -d[#green]->        d
+d               -l[#green]->        NewMReg : [M not registered]
+d               -d[#green]->        PingMobile : [M registered]
+
+NewMReg         -d[#green]->        c
+c               -d[#green]->        NewMSendMAck : [msg from M]
+c               -d[#green]->        NewMParseToken : [msg from S]
+
+NewMParseToken  -d[#green]->        NewMWaitStation : NewMWaitStation
+NewMWaitStation -u[#red,dashed]->   NewMParseToken : timeout
+
+NewMWaitStation -u[#blue,dashed]->  noToken : AckRecv
+
+
+legend
+blue  = outside trigger
+green = inside trigger
+red   = timout
+end legend
+@enduml
+
+@startuml diagram
+hide empty description
+
+state noToken
+state NewMfromM
+state NewMReg
+state NewMSendMAck
+state NewMParseToken
+state NewMWaitStation
+state NewMSendSAck
+state NewMfromS
+state PingMobile
+
+state c <<choice>>
+state d <<choice>>
+
+[*] -d-> noToken
+
+
+noToken         -d[#blue]->         NewMfromM : MRegFromM
+NewMfromM       -d[#green]->        NewMReg : NewMReg
+NewMSendMAck    -r[#green]->        NewMParseToken 
+
+noToken         -d[#blue]->         NewMfromS : MRegFromS
+NewMfromS       -d[#green]->        NewMSendSAck : NewMSendSAck
+NewMSendSAck    -d[#green]->        d
+d               -l[#green]->        NewMReg : [M not registered]
+d               -d[#green]->        PingMobile : [M registered]
+
+NewMReg         -d[#green]->        c
+c               -d[#green]->        NewMSendMAck : [msg from M]
+c               -d[#green]->        NewMParseToken : [msg from S]
+
+NewMParseToken  -d[#green]->        NewMWaitStation : NewMWaitStation
+NewMWaitStation -u[#red,dashed]->   NewMParseToken : timeout
+
+NewMWaitStation -u[#blue,dashed]->  noToken : AckRecv
+
+
+legend
+blue  = outside trigger
+green = inside trigger
+red   = timout
+end legend
+@enduml
+
+PlantUML version 1.2022.7(Mon Aug 22 19:01:30 CEST 2022)
+(GPL source distribution)
+Java Runtime: Java(TM) SE Runtime Environment
+JVM: Java HotSpot(TM) 64-Bit Server VM
+Default Encoding: Cp1252
+Language: en
+Country: US
+--></g></svg>

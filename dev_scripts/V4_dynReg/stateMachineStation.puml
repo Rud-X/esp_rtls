@@ -1,0 +1,35 @@
+@startuml diagram
+hide empty description
+
+state noToken
+state sendAck
+state pingMobile
+state waitMobile
+state parseToken
+state waitStation
+
+[*] -l-> noToken
+
+' [#blue]
+' [#red]
+
+noToken -l[#blue]-> sendAck: recievedParseToken
+
+sendAck -d[#green]-> pingMobile: sendAck
+
+pingMobile -d[#green]-> waitMobile: sendPingMsg
+waitMobile -u[#red,dashed]-> pingMobile: Timeout
+
+waitMobile -r[#blue]-> parseToken: recievedPongMsg
+
+parseToken -u[#green]-> waitStation: parseToken
+waitStation -d[#red,dashed]-> parseToken: Timeout
+
+waitStation -u[#blue]-> noToken: receivedAckToken
+
+legend
+blue  = outside trigger
+green = inside trigger
+red   = timout
+end legend
+@enduml
