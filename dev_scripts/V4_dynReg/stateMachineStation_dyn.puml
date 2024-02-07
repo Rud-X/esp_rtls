@@ -19,7 +19,7 @@ state d <<choice>>
 ' [#blue]
 ' [#green]
 ' [#red,dashed]
-
+'
 
 noToken         -d[#blue]->         NewMfromM : MRegFromM
 NewMfromM       -d[#green]->        NewMReg : NewMReg
