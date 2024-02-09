@@ -119,7 +119,7 @@ class esp_rtls_station:
 
     # debug attributes:
     __debug_time = 0
-    __debug_level_print = 2
+    __debug_level_print = 1
         # 0: no print
         # 1: location print
         # 2: debug print
@@ -510,19 +510,11 @@ class esp_rtls_station:
             self.station_list,
         )
         
-        print("Register Mobile: " + str(tokenID) + " - " + str(mobile_mac))
+        # if print debug level is 2 => print
+        self.__print_debug("Register Mobile: " + str(tokenID) + " - " + str(mobile_mac))
         
         # Add mobile to ESP-Now
         self.esp_now.add_peer(mobile_mac)
-        
-        # # if mac is equal to mac_mobile => send ack to mobile
-        # if mac == mobile_mac:
-        #     self.__print_debug("    mac == mobile_mac: send ack to mobile")
-        #     # Send ack to mobile
-        #     msgType = _MTID_newMobile_fromMobile_ack
-        #     msgTokenID = tokenID
-        #     msgData = (msgType & 0b111) << 5 | msgTokenID
-        #     self.esp_now.send(mac, bytearray([msgData]), True)
         
         if mac == mobile_mac:
             fromNewMfromM = True
